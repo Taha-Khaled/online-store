@@ -1,43 +1,3 @@
-<!--
-Sync Impact Report
-==================
-Version change: (unfilled template) → 1.3.0
-  - First concrete constitution. Version 1.3.0 is taken as supplied by the developer
-    (no earlier filled versions exist in this repository).
-
-Principles defined (template placeholder → new title):
-  - [PRINCIPLE_1_NAME] → I. Clean Architecture (NON-NEGOTIABLE)
-  - [PRINCIPLE_2_NAME] → II. Data Access (NON-NEGOTIABLE)
-  - [PRINCIPLE_3_NAME] → III. Security (NON-NEGOTIABLE)
-  - [PRINCIPLE_4_NAME] → IV. Inventory & Concurrency (NON-NEGOTIABLE)
-  - [PRINCIPLE_5_NAME] → V. Data Integrity
-
-Added sections:
-  - Project Context
-  - Business Rules
-  - API Conventions
-  - Seed Data
-  - Frontend
-  - AI-Assisted Development
-  - Tech Stack
-  - Repository Layout
-  - Quality Gates
-  - Project Workflow
-  - Governance: added Versioning Policy and Compliance Review sub-points (required by
-    the constitution workflow; derived from the supplied Governance and Quality Gates text)
-
-Removed sections:
-  - None ([SECTION_2_NAME] / [SECTION_3_NAME] replaced by the sections above)
-
-Templates:
-  - Not modified by this command; dependent templates read the constitution at runtime.
-
-Follow-up TODOs:
-  - None. No placeholders deferred.
-
-Note: this report is review scratch material; remove it before committing the file.
--->
-
 # Online Clothing & Shoes Store Constitution
 
 ## Project Context
@@ -88,8 +48,11 @@ proof of concept easy to review.
 - The stored procedure MUST use plain parameters and no dynamic SQL.
 - Sorting and filtering options MUST come from predefined enums, never from raw user strings.
 - Passwords MUST be hashed with ASP.NET Core `PasswordHasher` (no full ASP.NET Identity).
-- Authentication uses JWT stored in an httpOnly cookie. Role-based authorization MUST be
-  applied on every admin endpoint.
+- Authentication uses a JWT. The API MUST read it only from the `Authorization: Bearer` header
+  and MUST NEVER set cookies. Role-based authorization MUST be applied on every admin endpoint.
+- The Next.js app acts as a backend-for-frontend (BFF): it MUST store the JWT in an httpOnly,
+  Secure cookie on its own domain and forward it to the API from the server. The browser MUST
+  NEVER call the API directly, except to load public product images.
 - Secrets (admin and demo passwords, JWT key, connection string) come from User Secrets in
   development and environment variables in production. They MUST NEVER be committed.
 
@@ -154,6 +117,9 @@ and guarded by the database.
 
 - Next.js App Router with shadcn/ui.
 - Product pages are Server Components; interactive parts are Client Components.
+- All API calls go through Next.js server code (Server Components, Server Actions, or Route
+  Handlers), per the BFF rule.
+- The API's image host is allowed in the `next/image` configuration.
 - Guest cart lives in localStorage and is merged on login.
 - Middleware protects `/admin`, `/account`, and `/checkout`.
 
@@ -172,6 +138,17 @@ listed in Quality Gates before the task is considered done:
 
 .NET 10 (LTS) · ASP.NET Core Web API · EF Core · SQL Server · FluentValidation · Next.js ·
 shadcn/ui
+
+## Deployment
+
+- Source code lives in a local Git repository with a private GitHub remote. Pushing to GitHub
+  happens only when the developer asks.
+- Everything is hosted on MonsterASP.NET: the API, the SQL Server database, and the Next.js app
+  (Node.js), each as its own site.
+- HTTPS MUST be enabled on both sites before release (required for Secure cookies).
+- Production secrets are set in the hosting control panel, never in committed files.
+- Applying migrations to the hosted database always requires the developer's approval.
+- The design MUST NOT depend on the API and frontend sharing a domain.
 
 ## Repository Layout
 
@@ -231,4 +208,4 @@ this section applies.
   Security and Data Access principles checked explicitly (see Quality Gates). Plans produced by
   `/speckit-plan` must pass a Constitution Check against this document.
 
-**Version**: 1.3.0 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24
+**Version**: 1.4.0 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24
