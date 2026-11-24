@@ -27,8 +27,10 @@ public sealed class AccountSeeder(IAppDbContext db, IOptions<SeedOptions> option
                 continue;
             }
 
-            var passwordHash = HashPassword(GetRequiredPassword(account.Role));
-            db.Users.Add(new User(account.FullName, account.Email, account.Phone, passwordHash, account.Role, createdAt));
+            var password = GetRequiredPassword(account.Role);
+            var user = new User(account.FullName, account.Email, account.Phone, string.Empty, account.Role, createdAt);
+            user.SetPasswordHash(Hasher.HashPassword(user, password));
+            db.Users.Add(user);
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -47,7 +49,4 @@ public sealed class AccountSeeder(IAppDbContext db, IOptions<SeedOptions> option
 
         return password;
     }
-
-    // PasswordHasher<TUser> does not use the user instance when hashing.
-    private static string HashPassword(string password) => Hasher.HashPassword(null!, password);
 }

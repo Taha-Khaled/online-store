@@ -21,4 +21,10 @@ public class User
     public string PasswordHash { get; private set; }
     public Role Role { get; private set; }
     public DateTime CreatedAt { get; private set; }
+
+    public void SetPasswordHash(string passwordHash)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
+        PasswordHash = passwordHash;
+    }
 }
