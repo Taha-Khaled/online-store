@@ -1,17 +1,25 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.4.0 → 1.5.0 (version as supplied by the developer)
-  - Bump: MINOR. Project Workflow's work-item rule is redefined (GitHub Issues → Spec Kit
-    task IDs). It only affects working practice, not principles, so MINOR is accepted.
+Version change: 1.5.0 → 1.7.0 (version as supplied by the developer; no 1.6.0 exists in
+this repository)
+  - Bump: MINOR. The seeding mechanism is redefined (UseSeeding → explicit seeder), a seeding
+    switch is added, and the approved dependencies change. No principle is changed.
 
 Modified principles:
   - None
 
 Modified sections:
-  - Project Workflow → Work items: no external issues; work item = `#<feature>-<task>` from
-    the feature's tasks.md (e.g. `feat #001-T005 ...`); branches use the feature number
-    (e.g. `feat/001-database`); stop and ask if a change has no matching task.
+  - Seed Data: `UseSeeding` replaced by an explicit `DatabaseSeeder` call at startup in every
+    environment (after `MigrateAsync`, which runs in Development only); new `Seed:Enabled`
+    switch (default true; false = seeder does nothing); per-table emptiness rule replaced by
+    a reference to the seeding groups in the Database spec.
+  - Project Workflow → Approved dependencies: added `Microsoft.EntityFrameworkCore`
+    (Store.Application); removed `Testcontainers.MsSql`; integration tests use the local SQL
+    Server.
+  - Reasons (from the 001-database plan): Production never runs migrations at startup, so
+    EF's UseSeeding hook would never fire there; Docker is not available for Testcontainers;
+    `IAppDbContext` exposes `DbSet<T>`.
 
 Added sections:
   - None
@@ -19,10 +27,12 @@ Added sections:
 Removed sections:
   - None
 
+1.7.0 → 1.7.1 (PATCH):
+  - Project Workflow → Frontend/backend separation: "separate issues" → "separate tasks", to
+    match the Work items rule (no external issues).
+
 Follow-up TODOs:
-  - "Frontend/backend separation" still says "separate issues, branches, and PRs", which no
-    longer matches the Work items rule. Kept verbatim as supplied; consider rewording.
-  - The amendment does not record its reason, as Governance requires.
+  - None.
 
 Note: this report is review scratch material; remove it before committing the file.
 -->
@@ -135,9 +145,13 @@ and guarded by the database.
 ## Seed Data
 
 - The store must never open empty: default data is seeded automatically.
-- Static lookup data (colors, sizes) uses `HasData`. Everything else uses runtime seeding
-  (`UseSeeding`).
-- Seeding is idempotent: it runs only when the target table is empty.
+- Static lookup data (colors, sizes) uses `HasData`. Everything else is seeded at runtime by a
+  `DatabaseSeeder` called explicitly at application startup in every environment (after
+  `MigrateAsync`, which runs in Development only). EF Core `UseSeeding` is not used.
+- Seeding is controlled by the configuration switch `Seed:Enabled` (default `true`). When it is
+  `false`, the seeder does nothing at all.
+- Seeding is idempotent; the seeding groups and their conditions are defined in the Database
+  spec.
 - Seeded data must be internally consistent (dates relative to the seed date, stock reflecting
   seeded orders).
 - The exact seed content is defined in the Database spec.
@@ -210,18 +224,20 @@ this section applies.
   database. The agent may create and apply migrations and run seeding against it without
   asking. Any other database requires approval.
 - **Approved dependencies** (may be used without asking):
-  - Backend: `Microsoft.EntityFrameworkCore.SqlServer`, `Microsoft.EntityFrameworkCore.Design`,
+  - Backend: `Microsoft.EntityFrameworkCore` (also in Store.Application, for `IAppDbContext`),
+    `Microsoft.EntityFrameworkCore.SqlServer`, `Microsoft.EntityFrameworkCore.Design`,
     `Microsoft.EntityFrameworkCore.Tools`, `FluentValidation.DependencyInjectionExtensions`
     (validators are called explicitly; the deprecated `FluentValidation.AspNetCore`
     auto-validation is not used), `Microsoft.AspNetCore.Authentication.JwtBearer`,
     `Swashbuckle.AspNetCore`
   - Backend tests: `xunit`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`, `Shouldly`,
-    `Microsoft.AspNetCore.Mvc.Testing`, `Testcontainers.MsSql`, `coverlet.collector`
+    `Microsoft.AspNetCore.Mvc.Testing`, `coverlet.collector`. Integration tests run against the
+    local SQL Server instance (one uniquely named database per test, dropped afterwards).
   - Frontend: `next`, `react`, `react-dom`, `tailwindcss`, shadcn/ui components,
     `lucide-react`, `zod`, `react-hook-form`
   - Anything else requires approval.
 - **Frontend/backend separation**: database and backend work belong to the backend side.
-  Frontend work is always done in separate issues, branches, and PRs.
+  Frontend work is always done in separate tasks, branches, and PRs.
 
 ## Governance
 
@@ -238,4 +254,4 @@ this section applies.
   Security and Data Access principles checked explicitly (see Quality Gates). Plans produced by
   `/speckit-plan` must pass a Constitution Check against this document.
 
-**Version**: 1.5.0 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24
+**Version**: 1.7.1 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24
