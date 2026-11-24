@@ -1,3 +1,32 @@
+<!--
+Sync Impact Report
+==================
+Version change: 1.4.0 → 1.5.0 (version as supplied by the developer)
+  - Bump: MINOR. Project Workflow's work-item rule is redefined (GitHub Issues → Spec Kit
+    task IDs). It only affects working practice, not principles, so MINOR is accepted.
+
+Modified principles:
+  - None
+
+Modified sections:
+  - Project Workflow → Work items: no external issues; work item = `#<feature>-<task>` from
+    the feature's tasks.md (e.g. `feat #001-T005 ...`); branches use the feature number
+    (e.g. `feat/001-database`); stop and ask if a change has no matching task.
+
+Added sections:
+  - None
+
+Removed sections:
+  - None
+
+Follow-up TODOs:
+  - "Frontend/backend separation" still says "separate issues, branches, and PRs", which no
+    longer matches the Work items rule. Kept verbatim as supplied; consider rewording.
+  - The amendment does not record its reason, as Governance requires.
+
+Note: this report is review scratch material; remove it before committing the file.
+-->
+
 # Online Clothing & Shoes Store Constitution
 
 ## Project Context
@@ -170,9 +199,10 @@ shadcn/ui
 These rules adapt the developer's global agent rules to this project. Where they conflict,
 this section applies.
 
-- **Work items**: every task is tracked as a GitHub Issue. Its number is the work item number
-  used in branch names, commit messages, and PR titles (e.g. `feat #12 product variants
-  schema`). If no issue exists for a task, stop and ask.
+- **Work items**: there are no external issues. The work item number is the Spec Kit task ID
+  from the feature's `tasks.md`, written with its feature number: `#<feature>-<task>`
+  (e.g. `feat #001-T005 add product variant entity`). Branches use the feature number
+  (e.g. `feat/001-database`). If a change has no matching task, stop and ask.
 - **Coverage**: changed code must reach 80% line and branch coverage. Excluded from coverage:
   EF Core migrations, entity configurations, seed data, `Program.cs` and DI registration, and
   DTOs without logic.
@@ -208,4 +238,4 @@ this section applies.
   Security and Data Access principles checked explicitly (see Quality Gates). Plans produced by
   `/speckit-plan` must pass a Constitution Check against this document.
 
-**Version**: 1.4.0 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24
+**Version**: 1.5.0 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24
