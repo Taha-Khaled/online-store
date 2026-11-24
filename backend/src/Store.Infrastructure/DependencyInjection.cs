@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Store.Application.Common;
 using Store.Infrastructure.Persistence;
+using Store.Infrastructure.Seeding;
 
 namespace Store.Infrastructure;
 
@@ -19,6 +20,12 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
         services.AddScoped<IAppDbContext>(provider => provider.GetRequiredService<AppDbContext>());
         services.AddSingleton(TimeProvider.System);
+
+        services.AddOptions<SeedOptions>().Bind(configuration.GetSection(SeedOptions.SectionName));
+        services.AddScoped<AccountSeeder>();
+        services.AddScoped<CatalogSeeder>();
+        services.AddScoped<DatabaseSeeder>();
+        services.AddScoped<DatabaseInitializer>();
 
         return services;
     }
