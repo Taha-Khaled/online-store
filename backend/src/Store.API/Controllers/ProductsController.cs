@@ -17,4 +17,8 @@ public sealed class ProductsController(ProductService products) : ControllerBase
     [HttpGet("filters")]
     public Task<ProductFiltersResponse> Filters([FromQuery] string? category, CancellationToken cancellationToken) =>
         products.GetFiltersAsync(category, cancellationToken);
+
+    [HttpGet("{slug}")]
+    public Task<ProductDetailsResponse> GetBySlug(string slug, CancellationToken cancellationToken) =>
+        products.GetBySlugAsync(slug, cancellationToken);
 }

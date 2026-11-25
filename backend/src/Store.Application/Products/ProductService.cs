@@ -54,6 +54,56 @@ public sealed class ProductService(IAppDbContext db, IValidator<ProductListQuery
     }
 
     /// <summary>
+    /// Details of an active product by slug (FR-040). The purchasable quantity is computed in the
+    /// query, so the exact stock never leaves the database.
+    /// </summary>
+    public async Task<ProductDetailsResponse> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
+    {
+        var normalized = slug.Trim().ToLowerInvariant();
+        var product = await db.Products
+            .AsNoTracking()
+            .Where(candidate => candidate.Slug == normalized && candidate.IsActive)
+            .Select(candidate => new ProductHeader(
+                candidate.Id,
+                candidate.Name,
+                candidate.Slug,
+                candidate.Description,
+                candidate.Price,
+                new ProductCategoryResponse(
+                    candidate.Category.Name,
+                    candidate.Category.Slug,
+                    candidate.Category.ParentCategory != null ? candidate.Category.ParentCategory.Name : null)))
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(ErrorCodes.ProductNotFound, "Product not found.");
+
+        var variants = await db.ProductVariants
+            .AsNoTracking()
+            .Where(variant => variant.ProductId == product.Id)
+            .Select(variant => new VariantRow(
+                variant.Id,
+                variant.ColorId,
+                variant.Color.Name,
+                variant.Color.HexCode,
+                variant.SizeId,
+                variant.Size.Name,
+                variant.Size.DisplayOrder,
+                variant.Sku,
+                variant.Stock > 0,
+                variant.Stock < CatalogLimits.MaxQuantityPerVariant ? variant.Stock : CatalogLimits.MaxQuantityPerVariant))
+            .ToListAsync(cancellationToken);
+
+        var images = await db.ProductImages
+            .AsNoTracking()
+            .Where(image => image.ProductId == product.Id)
+            .OrderBy(image => image.DisplayOrder)
+            .ThenBy(image => image.Id)
+            .Select(image => new ImageRow(image.ColorId, image.Url, image.IsMain))
+            .ToListAsync(cancellationToken);
+
+        return ToDetails(product, variants, images);
+    }
+
+    /// <summary>
     /// Colors and sizes with at least one in-stock variant on an active product in scope, plus the
     /// price range of the active products in scope (FR-041).
     /// </summary>
@@ -183,6 +233,82 @@ public sealed class ProductService(IAppDbContext db, IValidator<ProductListQuery
             row.MainImageUrl,
             colors.GetValueOrDefault(row.Id) ?? [],
             row.InStock);
+
+    private static ProductDetailsResponse ToDetails(ProductHeader product, List<VariantRow> variants, List<ImageRow> images)
+    {
+        var colors = variants
+            .DistinctBy(variant => variant.ColorId)
+            .OrderBy(variant => FirstImageRank(images, variant.ColorId))
+            .ThenBy(variant => variant.ColorName, StringComparer.Ordinal)
+            .Select(variant => new ProductColorResponse(
+                variant.ColorId,
+                variant.ColorName,
+                variant.ColorHexCode,
+                images
+                    .Where(image => image.ColorId == variant.ColorId)
+                    .Select(image => new ProductImageResponse(image.Url, image.IsMain))
+                    .ToList()))
+            .ToList();
+
+        var sizes = variants
+            .DistinctBy(variant => variant.SizeId)
+            .OrderBy(variant => variant.SizeDisplayOrder)
+            .Select(variant => new ProductSizeResponse(variant.SizeId, variant.SizeName))
+            .ToList();
+
+        var colorOrder = colors.Select(color => color.Id).ToList();
+        var orderedVariants = variants
+            .OrderBy(variant => colorOrder.IndexOf(variant.ColorId))
+            .ThenBy(variant => variant.SizeDisplayOrder)
+            .Select(variant => new VariantResponse(
+                variant.Id,
+                variant.ColorId,
+                variant.SizeId,
+                variant.Sku,
+                variant.InStock,
+                variant.MaxQuantity))
+            .ToList();
+
+        return new ProductDetailsResponse(
+            product.Id,
+            product.Name,
+            product.Slug,
+            product.Description,
+            product.Price,
+            product.Category,
+            colors,
+            sizes,
+            orderedVariants);
+    }
+
+    /// <summary>Position of the color's first image (images are already ordered); colors without images go last.</summary>
+    private static int FirstImageRank(List<ImageRow> images, int colorId)
+    {
+        var index = images.FindIndex(image => image.ColorId == colorId);
+        return index < 0 ? int.MaxValue : index;
+    }
+
+    private sealed record ProductHeader(
+        int Id,
+        string Name,
+        string Slug,
+        string Description,
+        decimal Price,
+        ProductCategoryResponse Category);
+
+    private sealed record VariantRow(
+        int Id,
+        int ColorId,
+        string ColorName,
+        string ColorHexCode,
+        int SizeId,
+        string SizeName,
+        int SizeDisplayOrder,
+        string Sku,
+        bool InStock,
+        int MaxQuantity);
+
+    private sealed record ImageRow(int? ColorId, string Url, bool IsMain);
 
     private sealed record ProductRow(
         int Id,
