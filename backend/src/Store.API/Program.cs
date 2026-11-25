@@ -26,6 +26,7 @@ builder.Services
         options.InvalidModelStateResponseFactory = ModelStateErrors.CreateResponse;
     });
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+builder.Services.AddJwtAuthentication();
 
 var app = builder.Build();
 
@@ -42,6 +43,8 @@ app.UseExceptionHandler(_ => { });
 app.UseStatusCodePages(ErrorResponseWriter.WriteStatusCodePageAsync);
 app.UseHttpsRedirection();
 app.UseProductImages();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 await app.RunAsync();
