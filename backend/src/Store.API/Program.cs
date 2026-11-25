@@ -1,5 +1,6 @@
 using Store.API.Binding;
 using Store.API.Errors;
+using Store.API.Extensions;
 using Store.Application;
 using Store.Infrastructure;
 using Store.Infrastructure.Seeding;
@@ -35,6 +36,7 @@ await using (var scope = app.Services.CreateAsyncScope())
 app.UseExceptionHandler(_ => { });
 app.UseStatusCodePages(ErrorResponseWriter.WriteStatusCodePageAsync);
 app.UseHttpsRedirection();
+app.UseProductImages();
 app.MapControllers();
 
 await app.RunAsync();
