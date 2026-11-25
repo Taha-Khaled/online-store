@@ -25,6 +25,9 @@ public class Order
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
+    /// <summary>Concurrency token: a status change made elsewhere makes a stale update fail (research R6).</summary>
+    public byte[] RowVersion { get; private set; } = [];
+
     public User User { get; private set; } = null!;
     public IReadOnlyCollection<OrderItem> Items => _items;
 
