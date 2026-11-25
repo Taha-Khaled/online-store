@@ -12,4 +12,9 @@ public sealed class ProductsController(ProductService products) : ControllerBase
     [HttpGet]
     public Task<PagedResponse<ProductListItemResponse>> List([FromQuery] ProductListQuery query, CancellationToken cancellationToken) =>
         products.ListAsync(query, cancellationToken);
+
+    /// <summary>Filter panel options, optionally limited to a category slug (literal route wins over a slug).</summary>
+    [HttpGet("filters")]
+    public Task<ProductFiltersResponse> Filters([FromQuery] string? category, CancellationToken cancellationToken) =>
+        products.GetFiltersAsync(category, cancellationToken);
 }

@@ -53,6 +53,38 @@ public sealed class ProductService(IAppDbContext db, IValidator<ProductListQuery
         return new PagedResponse<ProductListItemResponse>(items, query.Page, query.PageSize, totalCount, totalPages);
     }
 
+    /// <summary>
+    /// Colors and sizes with at least one in-stock variant on an active product in scope, plus the
+    /// price range of the active products in scope (FR-041).
+    /// </summary>
+    public async Task<ProductFiltersResponse> GetFiltersAsync(string? category, CancellationToken cancellationToken = default)
+    {
+        var categoryIds = await ResolveCategoryIdsAsync(category, cancellationToken);
+        var products = ActiveProducts(categoryIds);
+        var inStockVariants = products.SelectMany(product => product.Variants).Where(variant => variant.Stock > 0);
+
+        var colors = await inStockVariants
+            .Select(variant => new { variant.Color.Name, variant.Color.HexCode })
+            .Distinct()
+            .OrderBy(color => color.Name)
+            .ToListAsync(cancellationToken);
+
+        var sizes = await inStockVariants
+            .Select(variant => new { variant.Size.Name, variant.Size.DisplayOrder })
+            .Distinct()
+            .OrderBy(size => size.DisplayOrder)
+            .ToListAsync(cancellationToken);
+
+        var minPrice = await products.MinAsync(product => (decimal?)product.Price, cancellationToken);
+        var maxPrice = await products.MaxAsync(product => (decimal?)product.Price, cancellationToken);
+
+        return new ProductFiltersResponse(
+            colors.Select(color => new ColorSummaryResponse(color.Name, color.HexCode)).ToList(),
+            sizes.Select(size => new SizeSummaryResponse(size.Name)).ToList(),
+            minPrice,
+            maxPrice);
+    }
+
     /// <summary>The category and its children; null when no category filter is given.</summary>
     private async Task<List<int>?> ResolveCategoryIdsAsync(string? slug, CancellationToken cancellationToken)
     {
