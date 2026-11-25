@@ -8,7 +8,7 @@
           <Include>[Store.*]*</Include>
           <Exclude>[Store.*.Tests]*</Exclude>
           <ExcludeByFile>**/Persistence/Migrations/**/*.cs,**/Persistence/Configurations/**/*.cs,**/Seeding/Data/**/*.cs,**/Program.cs,**/DependencyInjection.cs,**/*Request.cs,**/*Response.cs</ExcludeByFile>
-          <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+          <ExcludeByAttribute>GeneratedCodeAttribute</ExcludeByAttribute>
         </Configuration>
       </DataCollector>
     </DataCollectors>
