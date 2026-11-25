@@ -27,6 +27,7 @@ public static class DependencyInjection
 
         services.AddOptions<JwtOptions>().Bind(configuration.GetSection(JwtOptions.SectionName)).ValidateOnStart();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
+        services.AddSingleton<ITokenService, TokenService>();
 
         services.AddOptions<SeedOptions>().Bind(configuration.GetSection(SeedOptions.SectionName));
         services.AddScoped<AccountSeeder>();
