@@ -23,6 +23,14 @@ developer are reproduced in the requirements below.)
   retry with `cartChanged` / `checkoutConflict` (FR-018).
 - Q: Error code when all cancel attempts conflict? → A: 409 `orderConflict` (FR-025).
 
+### Session 2026-11-26
+
+- Q: Parallel adds of the same variant by the same customer can lose an increment (cart lines have
+  no concurrency token). Accept? → A: Yes. The cart still has one line, the quantity stays 1–5, it
+  is never a 500, and checkout re-validates everything.
+- Q: Must order numbers follow commit order? → A: No; they increase in the order they are
+  assigned, and gaps are allowed (FR-020).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Customer keeps a cart on the server (Priority: P1)
@@ -160,7 +168,8 @@ Every shopping endpoint is for logged-in customers only.
   is there.
 - Updating the quantity of an item whose product is now inactive: 404 `variantNotFound`.
 - Two add requests for the same variant at the same moment: the cart ends with one line for that
-  variant (no duplicate lines, never a 500).
+  variant (no duplicate lines, never a 500); one increment may be lost, the quantity stays 1–5,
+  and checkout re-validates everything (accepted, Clarifications 2026-11-26).
 - Merge list with the same variant twice: treated as one entry with the higher quantity.
 - Merge list over 30 entries, or an entry with quantity outside 1–5: 400 validation error.
 - Checkout when stock is enough on the first check but taken by another checkout before saving:
@@ -232,8 +241,9 @@ Every shopping endpoint is for logged-in customers only.
   IV as amended in 1.7.3).
 - **FR-019**: Two checkouts of the same cart at the same moment MUST create at most one order; the
   other gets 400 `cartEmpty` or 409, never a second order.
-- **FR-020**: The order number MUST be unique, `ORD-` followed by a number, increasing in creation
-  order, safe under concurrent checkouts, and never collide with the seeded ORD-0001 to ORD-0008.
+- **FR-020**: The order number MUST be unique, `ORD-` followed by a number, increasing in the
+  order numbers are assigned (gaps allowed), safe under concurrent checkouts, and never collide
+  with the seeded ORD-0001 to ORD-0008.
 - **FR-021**: Successful checkout MUST return 201 with the full order (as FR-024).
 - **FR-022**: The domain MUST enforce: a variant's stock never goes below 0; a new order always
   starts as Pending; the order owns its items and its status transitions.
@@ -263,7 +273,8 @@ Every shopping endpoint is for logged-in customers only.
 - **Cart item** (from 001): one line in a customer's cart: customer, variant, quantity (1–5),
   added date. Unique per customer and variant.
 - **Order** (from 001): number, customer, status, shipping details, notes, subtotal, shipping fee,
-  total, created/updated dates; owns its items and status transitions.
+  total, created/updated dates; owns its items and status transitions; has a concurrency token
+  protecting status changes.
 - **Order item** (from 001): snapshot of product name, color, size, unit price and quantity, plus a
   link to the variant.
 - **Product variant** (from 001): stock per color and size, with a concurrency token; stock changes

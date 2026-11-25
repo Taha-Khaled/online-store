@@ -51,8 +51,9 @@ agent's choices within constitution 1.7.3 and the 002 structure.
   then `Single()`. `ToListAsync` without other operators keeps EF from wrapping the statement in a
   subquery (SQL Server forbids `NEXT VALUE FOR` inside derived tables); same pattern as the 001
   procedure call. Interpolated `SqlQuery` without user values — allowed by constitution III.
-- **Gaps**: a failed or retried checkout consumes a number; acceptable *(developer)*. Values are
-  increasing, never reused, and start above the seeded ORD-0001…ORD-0008.
+- **Gaps**: a failed or retried checkout consumes a number; acceptable *(developer)*. Values
+  increase in the order they are assigned (not necessarily commit order), are never reused, and
+  start above the seeded ORD-0001…ORD-0008.
 - **Alternatives**: `MAX(OrderNumber)+1` (race-prone); identity-derived number after insert (two
   saves per order).
 
@@ -60,7 +61,8 @@ agent's choices within constitution 1.7.3 and the 002 structure.
 
 - **Decision** *(developer)* — `CheckoutService.CheckoutAsync(userId, request)`:
   1. Validate the request (FluentValidation; phone rule shared with registration).
-  2. Up to **3 attempts**, each: `ChangeTracker.Clear()`, begin a transaction, then
+  2. Up to **3 attempts** run by `ConcurrencyRetry`, which clears the change tracker and begins,
+     commits or rolls back one transaction per attempt; inside each attempt:
      - load the customer's cart items **tracked** with variant → product, color and size;
      - empty → 400 `cartEmpty`;
      - compute each item's status (R7); any non-`available` → 409 `cartChanged` with `details`
@@ -139,6 +141,9 @@ agent's choices within constitution 1.7.3 and the 002 structure.
   `(UserId, ProductVariantId)` rejects one → catch `DbUpdateException`, `ChangeTracker.Clear()`,
   reload; if a line for that variant now exists, apply the add once more as an update (same
   checks); otherwise rethrow (→ 500). Same idea as the 002 duplicate-email race.
+- **Accepted limitation** *(developer, 2026-11-26)*: cart lines have no concurrency token, so
+  parallel adds to an existing line by the same customer may lose an increment. The cart keeps one
+  line, quantity 1–5, never a 500, and checkout re-validates everything.
 - **Update** (`PUT`): line must belong to the customer (else 404 `cartItemNotFound`); variant's
   product inactive → 404 `variantNotFound`; quantity 1–5 (400) and ≤ stock (409
   `insufficientStock`).
