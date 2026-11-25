@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Store.Application.Common;
 using Store.Application.Common.Errors;
 using Store.Application.Common.Validation;
+using Store.Domain;
 using Store.Domain.Entities;
 
 namespace Store.Application.Products;
@@ -89,7 +90,7 @@ public sealed class ProductService(IAppDbContext db, IValidator<ProductListQuery
                 variant.Size.DisplayOrder,
                 variant.Sku,
                 variant.Stock > 0,
-                variant.Stock < CatalogLimits.MaxQuantityPerVariant ? variant.Stock : CatalogLimits.MaxQuantityPerVariant))
+                variant.Stock < StoreLimits.MaxQuantityPerVariant ? variant.Stock : StoreLimits.MaxQuantityPerVariant))
             .ToListAsync(cancellationToken);
 
         var images = await db.ProductImages
