@@ -46,6 +46,14 @@ public class PasswordHasherTests
     }
 
     [Fact]
+    public void Verify_EmptyHash_MeansNoAccount_AndFails()
+    {
+        // Used for unknown emails at login: same work as a real check, always false (FR-015).
+        _hasher.Verify(string.Empty, Password).ShouldBeFalse();
+        _hasher.Verify(string.Empty, string.Empty).ShouldBeFalse();
+    }
+
+    [Fact]
     public void Verify_HashCreatedLikeThe001Seeder_Succeeds()
     {
         // 001 hashed with PasswordHasher<User> and a real user instance.
