@@ -28,7 +28,39 @@ public class ErrorShapeTests(ErrorTestApiFactory factory) : IClassFixture<ErrorT
         error.Code.ShouldBe(code);
         error.Message.ShouldBe(message);
         error.Errors.ShouldBeNull();
-        (await response.Content.ReadAsStringAsync()).ShouldNotContain("\"errors\"");
+        var json = await response.Content.ReadAsStringAsync();
+        json.ShouldNotContain("\"errors\"");
+        json.ShouldNotContain("\"details\"");
+    }
+
+    [Fact]
+    public async Task BadRequestException_Returns400WithCodeOnly()
+    {
+        var response = await _client.GetAsync($"{Base}/bad-request");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var error = await response.ReadErrorAsync();
+        error.Code.ShouldBe("cartEmpty");
+        error.Message.ShouldBe("Your cart is empty.");
+        var json = await response.Content.ReadAsStringAsync();
+        json.ShouldNotContain("\"errors\"");
+        json.ShouldNotContain("\"details\"");
+    }
+
+    [Fact]
+    public async Task ConflictWithDetails_WritesTheDetailsObject()
+    {
+        var response = await _client.GetAsync($"{Base}/conflict-with-details");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        using var document = System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = document.RootElement;
+        root.GetProperty("code").GetString().ShouldBe("cartChanged");
+        var item = root.GetProperty("details").GetProperty("items")[0];
+        item.GetProperty("itemId").GetInt32().ShouldBe(41);
+        item.GetProperty("status").GetString().ShouldBe("quantityReduced");
+        item.GetProperty("maxQuantity").GetInt32().ShouldBe(1);
+        root.TryGetProperty("errors", out _).ShouldBeFalse();
     }
 
     [Fact]
