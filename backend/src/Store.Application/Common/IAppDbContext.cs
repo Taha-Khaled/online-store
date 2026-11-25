@@ -16,6 +16,7 @@ public interface IAppDbContext
     DbSet<CartItem> CartItems { get; }
     DbSet<Order> Orders { get; }
     DbSet<OrderItem> OrderItems { get; }
+    DbSet<RefreshToken> RefreshTokens { get; }
 
     DatabaseFacade Database { get; }
 

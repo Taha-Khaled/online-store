@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Store.Application.Common;
+using Store.Application.Common.Security;
 using Store.Domain.Entities;
 using Store.Domain.Enums;
 using Store.Infrastructure.Seeding.Data;
@@ -9,12 +9,14 @@ using Store.Infrastructure.Seeding.Data;
 namespace Store.Infrastructure.Seeding;
 
 /// <summary>Creates each seed account whose email does not exist yet (spec FR-019, FR-020).</summary>
-public sealed class AccountSeeder(IAppDbContext db, IOptions<SeedOptions> options, TimeProvider timeProvider)
+public sealed class AccountSeeder(
+    IAppDbContext db,
+    IOptions<SeedOptions> options,
+    IPasswordHasher passwordHasher,
+    TimeProvider timeProvider)
 {
     private const string AdminPasswordKey = "Seed:AdminPassword";
     private const string CustomerPasswordKey = "Seed:CustomerPassword";
-
-    private static readonly PasswordHasher<User> Hasher = new();
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
@@ -28,9 +30,8 @@ public sealed class AccountSeeder(IAppDbContext db, IOptions<SeedOptions> option
             }
 
             var password = GetRequiredPassword(account.Role);
-            var user = new User(account.FullName, account.Email, account.Phone, string.Empty, account.Role, createdAt);
-            user.SetPasswordHash(Hasher.HashPassword(user, password));
-            db.Users.Add(user);
+            var passwordHash = passwordHasher.Hash(password);
+            db.Users.Add(new User(account.FullName, account.Email, account.Phone, passwordHash, account.Role, createdAt));
         }
 
         await db.SaveChangesAsync(cancellationToken);

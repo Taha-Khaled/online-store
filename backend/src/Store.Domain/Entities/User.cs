@@ -6,6 +6,8 @@ public class User
 {
     public User(string fullName, string email, string phone, string passwordHash, Role role, DateTime createdAt)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
+
         FullName = fullName;
         Email = email;
         Phone = phone;
@@ -21,10 +23,4 @@ public class User
     public string PasswordHash { get; private set; }
     public Role Role { get; private set; }
     public DateTime CreatedAt { get; private set; }
-
-    public void SetPasswordHash(string passwordHash)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
-        PasswordHash = passwordHash;
-    }
 }

@@ -4,29 +4,31 @@ using Store.Domain.Enums;
 
 namespace Store.Domain.Tests.Entities;
 
+/// <summary>FR-027: a user is only ever created with a real password hash (data-model.md User.PasswordHash).</summary>
 public class UserTests
 {
     [Fact]
-    public void SetPasswordHash_ReplacesHash()
+    public void Constructor_WithHash_SetsAllFields()
     {
-        var user = CreateUser();
+        var createdAt = new DateTime(2026, 11, 24, 12, 0, 0, DateTimeKind.Utc);
 
-        user.SetPasswordHash("new-hash");
+        var user = new User("Demo Customer", "customer@store.local", "01000000002", "hash-value", Role.Customer, createdAt);
 
-        user.PasswordHash.ShouldBe("new-hash");
+        user.FullName.ShouldBe("Demo Customer");
+        user.Email.ShouldBe("customer@store.local");
+        user.Phone.ShouldBe("01000000002");
+        user.PasswordHash.ShouldBe("hash-value");
+        user.Role.ShouldBe(Role.Customer);
+        user.CreatedAt.ShouldBe(createdAt);
     }
 
     [Theory]
+    [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void SetPasswordHash_EmptyValue_Throws(string passwordHash)
+    public void Constructor_WithoutHash_Throws(string? passwordHash)
     {
-        var user = CreateUser();
-
-        Should.Throw<ArgumentException>(() => user.SetPasswordHash(passwordHash));
-        user.PasswordHash.ShouldBe("old-hash");
+        Should.Throw<ArgumentException>(() =>
+            new User("Demo Customer", "customer@store.local", "01000000002", passwordHash!, Role.Customer, DateTime.UtcNow));
     }
-
-    private static User CreateUser() =>
-        new("Demo Customer", "customer@store.local", "01000000002", "old-hash", Role.Customer, DateTime.UtcNow);
 }
