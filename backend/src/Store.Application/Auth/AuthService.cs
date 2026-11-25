@@ -103,18 +103,12 @@ public sealed class AuthService(
         Role role,
         CancellationToken cancellationToken)
     {
-        var accessToken = tokenService.CreateAccessToken(userId, email, role);
         var refreshToken = tokenService.CreateRefreshToken();
 
         db.RefreshTokens.Add(new RefreshToken(userId, refreshToken.Hash, refreshToken.CreatedAt, refreshToken.ExpiresAt));
         await db.SaveChangesAsync(cancellationToken);
 
-        return new AuthResponse(
-            accessToken.Token,
-            accessToken.ExpiresAt,
-            refreshToken.Token,
-            refreshToken.ExpiresAt,
-            new UserResponse(userId, fullName, email, role.ToString()));
+        return AuthResponses.Create(tokenService, userId, fullName, email, role, refreshToken);
     }
 
     private Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken) =>
