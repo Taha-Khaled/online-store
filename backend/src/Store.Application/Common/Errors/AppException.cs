@@ -7,8 +7,10 @@ public abstract class AppException(string code, string message) : Exception(mess
 }
 
 public sealed class ValidationException(IReadOnlyDictionary<string, string[]> errors)
-    : AppException(ErrorCodes.ValidationFailed, "One or more fields are invalid.")
+    : AppException(ErrorCodes.ValidationFailed, DefaultMessage)
 {
+    public const string DefaultMessage = "One or more fields are invalid.";
+
     public IReadOnlyDictionary<string, string[]> Errors { get; } = errors;
 }
 

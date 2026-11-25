@@ -1,4 +1,3 @@
-using System.Text.Json;
 using FluentValidation;
 using ValidationException = Store.Application.Common.Errors.ValidationException;
 
@@ -19,12 +18,9 @@ public static class ValidationExtensions
         }
 
         var errors = result.Errors
-            .GroupBy(failure => ToCamelCasePath(failure.PropertyName))
+            .GroupBy(failure => FieldNames.ToCamelCasePath(failure.PropertyName))
             .ToDictionary(group => group.Key, group => group.Select(failure => failure.ErrorMessage).Distinct().ToArray());
 
         throw new ValidationException(errors);
     }
-
-    private static string ToCamelCasePath(string propertyName) =>
-        string.Join('.', propertyName.Split('.').Select(JsonNamingPolicy.CamelCase.ConvertName));
 }
