@@ -35,6 +35,26 @@ public static class AuthClient
     public static Task<HttpResponseMessage> LoginAsync(this HttpClient client, string email, string password) =>
         client.PostAsJsonAsync("/api/auth/login", new { email, password });
 
+    public static Task<HttpResponseMessage> RefreshAsync(this HttpClient client, string refreshToken) =>
+        client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken });
+
+    public static Task<HttpResponseMessage> LogoutAsync(this HttpClient client, string refreshToken) =>
+        client.PostAsJsonAsync("/api/auth/logout", new { refreshToken });
+
+    public static async Task<AuthBody> RefreshOkAsync(this HttpClient client, string refreshToken)
+    {
+        var response = await client.RefreshAsync(refreshToken);
+        response.EnsureSuccessStatusCode();
+        return await response.ReadJsonAsync<AuthBody>();
+    }
+
+    public static async Task<AuthBody> LoginOkAsync(this HttpClient client, string email, string password = ValidPassword)
+    {
+        var response = await client.LoginAsync(email, password);
+        response.EnsureSuccessStatusCode();
+        return await response.ReadJsonAsync<AuthBody>();
+    }
+
     public static async Task<AuthBody> RegisterNewCustomerAsync(this HttpClient client, string? email = null)
     {
         var response = await client.RegisterAsync(Registration(email ?? UniqueEmail()));
