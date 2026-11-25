@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Store.Application.Auth;
 using Store.Application.Categories;
 using Store.Application.Products;
 
@@ -12,6 +13,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
         services.AddScoped<CategoryService>();
         services.AddScoped<ProductService>();
+        services.AddScoped<AuthService>();
 
         return services;
     }
