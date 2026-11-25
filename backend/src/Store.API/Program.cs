@@ -27,6 +27,7 @@ builder.Services
     });
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddJwtAuthentication();
+builder.Services.AddSwagger();
 
 var app = builder.Build();
 
@@ -43,6 +44,7 @@ app.UseExceptionHandler(_ => { });
 app.UseStatusCodePages(ErrorResponseWriter.WriteStatusCodePageAsync);
 app.UseHttpsRedirection();
 app.UseProductImages();
+app.UseSwaggerInDevelopment();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
