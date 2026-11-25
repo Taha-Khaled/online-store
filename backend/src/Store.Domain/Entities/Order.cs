@@ -29,8 +29,67 @@ public class Order
     public IReadOnlyCollection<OrderItem> Items => _items;
 
     /// <summary>
+    /// The only way to create a new customer order: status Pending, subtotal and total computed
+    /// from the item snapshots and the shipping fee, created = updated (data-model.md "Changed: Order").
+    /// </summary>
+    public static Order CreatePending(
+        string orderNumber,
+        int userId,
+        ShippingDetails shipping,
+        IReadOnlyCollection<OrderItem> items,
+        decimal shippingFee,
+        DateTime now)
+    {
+        if (string.IsNullOrWhiteSpace(orderNumber))
+        {
+            throw new DomainException("An order needs an order number.");
+        }
+
+        if (items.Count == 0)
+        {
+            throw new DomainException("An order needs at least one item.");
+        }
+
+        if (shippingFee < 0)
+        {
+            throw new DomainException("The shipping fee cannot be negative.");
+        }
+
+        var subtotal = items.Sum(item => item.UnitPrice * item.Quantity);
+        return CreateHistorical(
+            orderNumber,
+            userId,
+            OrderStatus.Pending,
+            subtotal,
+            shippingFee,
+            subtotal + shippingFee,
+            shipping.Name,
+            shipping.Phone,
+            shipping.City,
+            shipping.AddressLine,
+            shipping.Notes,
+            now,
+            items);
+    }
+
+    /// <summary>
+    /// Cancels a Pending or Confirmed order (domain rule). Whether a customer may cancel is decided
+    /// by the application (Pending only).
+    /// </summary>
+    public void Cancel(DateTime now)
+    {
+        if (Status is not (OrderStatus.Pending or OrderStatus.Confirmed))
+        {
+            throw new DomainException($"An order in status {Status} cannot be cancelled.");
+        }
+
+        Status = OrderStatus.Cancelled;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
     /// Creates an order that already happened (seed data or imported history), in any status.
-    /// New customer orders and status transitions belong to the Orders feature.
+    /// New customer orders use <see cref="CreatePending"/>.
     /// </summary>
     public static Order CreateHistorical(
         string orderNumber,
