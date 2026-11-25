@@ -30,6 +30,8 @@ requirements below.)
   an unknown slug (404).
 - Q: A rotated token that has also expired: reuse detection or plain 401? → A: "Rotated" is
   checked before "expired", so it triggers reuse detection (FR-023).
+- Q: Maximum password length? → A: 128 characters on register and login (validation error);
+  phone digits are ASCII 0-9 only (FR-013, FR-014).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -249,11 +251,13 @@ scenarios above:
 - **FR-012**: Successful registration MUST log the new customer in: status 201 with the same body
   as login.
 - **FR-013**: Registration validation: full name 2–100 characters; valid email up to 256
-  characters; phone up to 20 characters, digits with an optional leading `+`; password at least
-  8 characters with at least one letter and one digit.
+  characters; phone up to 20 characters, ASCII digits 0-9 only with an optional leading `+`;
+  password 8–128 characters with at least one letter and one digit (letters and digits of any
+  script count).
 - **FR-014**: `POST /api/auth/login` MUST accept email and password and return an access token, a
   refresh token, and the user's id, full name, email and role. Login validation only checks that
-  both are present (the registration password rules do not apply).
+  both are present and that the password is at most 128 characters (the other registration
+  password rules do not apply).
 - **FR-015**: Wrong email and wrong password MUST return the same 401 `invalidCredentials`.
 - **FR-016**: `GET /api/auth/me` MUST require a valid access token and return the current user's
   id, full name, email and role.
