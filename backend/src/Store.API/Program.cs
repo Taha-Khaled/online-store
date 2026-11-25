@@ -1,3 +1,4 @@
+using Store.API.Authorization;
 using Store.API.Binding;
 using Store.API.Errors;
 using Store.API.Extensions;
@@ -28,6 +29,7 @@ builder.Services
     });
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddJwtAuthentication();
+builder.Services.AddStorePolicies();
 builder.Services.AddSwagger();
 
 var app = builder.Build();

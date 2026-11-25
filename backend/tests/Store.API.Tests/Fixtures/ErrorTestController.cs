@@ -58,6 +58,10 @@ public sealed class ErrorTestController : ControllerBase
             "Some items in your cart changed.",
             new { items = new[] { new { itemId = 41, variantId = 12, status = "quantityReduced", maxQuantity = 1 } } });
 
+    [HttpGet("customer-only")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Policy = Store.API.Authorization.Policies.CustomerOnly)]
+    public IActionResult CustomerOnly() => Ok();
+
     [HttpGet("unexpected")]
     public IActionResult Unexpected() => throw new InvalidOperationException(SecretDetail);
 
