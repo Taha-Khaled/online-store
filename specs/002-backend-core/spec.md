@@ -26,6 +26,10 @@ requirements below.)
 - Q: Are size names case-insensitive like colors? → A: Yes (`size=xl` matches `XL`) (FR-033).
 - Q: With both color and size filters, must one variant have both? → A: Yes, one in-stock variant
   must have a requested color and a requested size (FR-035).
+- Q: Does AC 6 `category=sneakers` mean the slug `shoes-sneakers`? → A: Yes; `sneakers` alone is
+  an unknown slug (404).
+- Q: A rotated token that has also expired: reuse detection or plain 401? → A: "Rotated" is
+  checked before "expired", so it triggers reuse detection (FR-023).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -171,6 +175,24 @@ requests and check the error shape and status codes.
 
 ---
 
+### Acceptance criteria (developer numbering)
+
+The developer's 20 acceptance criteria, as cited by plan.md and tasks.md ("AC n"), mapped to the
+scenarios above:
+
+| AC | Scenarios / requirement | AC | Scenarios / requirement |
+|---|---|---|---|
+| 1 | US3-1, US3-2 | 11 | US1-9 |
+| 2 | US3-3, US3-4 | 12 | US3-6 |
+| 3 | US3-5 | 13 | US4-1, US4-2 |
+| 4 | US1-1 | 14 | US4-3 |
+| 5 | US1-2 | 15 | US4-4, US4-5 |
+| 6 | US1-3 (`sneakers` = slug `shoes-sneakers`, confirmed 2026-11-25) | 16 | US1-5, US1-6 |
+| 7 | US1-4 | 17 | US1-7 |
+| 8 | US2-1 | 18 | US1-8 |
+| 9 | US1-10, US2-2 | 19 | US3-4 |
+| 10 | US3-7, US5-3 | 20 | FR-042 |
+
 ### Edge Cases
 
 - Page beyond the last page: empty list with the correct total count and total pages.
@@ -200,7 +222,8 @@ requests and check the error shape and status codes.
   once, in one place.
 - **FR-002**: Status codes MUST be: 400 validation, 401 not authenticated, 403 not allowed,
   404 not found, 409 conflict, 500 unexpected. A 500 MUST carry a generic message; details go
-  only to the logs.
+  only to the logs. Framework errors (e.g. 405 wrong method, 415 unsupported media type, any
+  other error status without a body) MUST use the same shape.
 - **FR-003**: One global error handler MUST convert failures to this shape.
 - **FR-004**: Logs MUST carry metadata only (ids, codes, counts, durations). They MUST NEVER
   contain request bodies, passwords, tokens or personal data (names, emails, phones, addresses).
@@ -248,7 +271,7 @@ requests and check the error shape and status codes.
   revoke the presented token immediately, recording which token replaced it (rotation). There is
   no grace period.
 - **FR-023**: Using a refresh token that was already rotated MUST revoke all of that user's
-  refresh tokens and return 401.
+  refresh tokens and return 401, even if the rotated token has also expired.
 - **FR-024**: `POST /api/auth/logout` MUST revoke the presented refresh token only. Other devices'
   tokens are unaffected.
 - **FR-025**: Logout MUST NOT invalidate access tokens already issued; they stay valid until they
@@ -345,8 +368,9 @@ requests and check the error shape and status codes.
 - Error code names other than those named in the description (for example for validation,
   not-authenticated, not-allowed and unexpected errors, and an invalid refresh token) are chosen
   in the plan and defined once with the others.
-- Color and size filter values are user-supplied names compared as parameters against the stored
-  names; the sort option is a predefined enum, per the constitution's Security principle.
+- Color and size filter values are user-supplied names compared as query parameters against the
+  stored names; the set of sort and filter options is predefined, per the constitution's Security
+  principle (clarified in v1.7.2).
 - A product's colors are the colors of its variants (in stock or not), ordered by their first
   image's display order; a color without an image comes last, by name. A product with no main
   image has no main image URL (null).
@@ -366,7 +390,7 @@ requests and check the error shape and status codes.
 
 - Feature 001-database: schema, seed data (accounts, 18 products, categories, images) and the
   seeding pipeline.
-- Constitution v1.7.1: Clean Architecture, Data Access, Security (PasswordHasher, Bearer-only
+- Constitution v1.7.2: Clean Architecture, Data Access, Security (PasswordHasher, Bearer-only
   JWT, enum-based sorting), API Conventions, approved dependencies (FluentValidation, JwtBearer,
   Swashbuckle, Mvc.Testing).
 

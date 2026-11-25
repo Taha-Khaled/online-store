@@ -63,6 +63,9 @@ the constitution.
   change and EF throws `DbUpdateConcurrencyException`. The loser rolls back, reloads the token, and
   — because it is now rotated — runs reuse detection and returns 401.
   Same guarantee as a conditional `ExecuteUpdateAsync`, but the domain method enforces the rule.
+- **Check order**: unknown → 401; **rotated** (checked before expiry, so a rotated token that has
+  also expired still triggers reuse detection, FR-023) → reuse detection + 401; expired or
+  logged-out → 401; otherwise active → rotate.
 - **Reuse detection** (FR-023/FR-028): only a token with `ReplacedByTokenHash != null` triggers
   it. All of the user's active tokens are loaded and `Revoke(now)` is called on each, then saved.
   A token revoked by logout (no replacement) or expired just returns 401.

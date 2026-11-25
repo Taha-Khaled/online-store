@@ -58,7 +58,7 @@ files; logs metadata only; every error in one shape
 | II. Read-only queries `AsNoTracking` + `Select` to DTOs | ✅ | [research R10](research.md#r10-catalog-queries) |
 | II. Named migration for every schema change | ✅ | `AddRefreshTokens` |
 | III. LINQ only, no raw SQL | ✅ | search via `Contains` (parameterized, escaped) ([R9](research.md#r9-case-insensitive-wildcard-safe-search)) |
-| III. Sort/filter options from enums | ✅ | `ProductSort` enum + strict binder ([R8](research.md#r8-sorting-and-query-binding)); color/size values are parameters |
+| III. Set of sort/filter options from enums; filter values only as query parameters (1.7.2) | ✅ | `ProductSort` enum + strict binder ([R8](research.md#r8-sorting-and-query-binding)); fixed filter set in `ProductListQuery`; color/size values compared as LINQ parameters |
 | III. ASP.NET Core `PasswordHasher` | ✅ | wrapped by `IPasswordHasher` ([R1](research.md#r1-password-hasher-abstraction)) |
 | III. JWT from Bearer header only; no cookies | ✅ | JwtBearer default; no cookie code |
 | III. Role authorization on admin endpoints | n/a | no admin endpoints in this feature; role claim mapped for 004 |
@@ -72,7 +72,7 @@ files; logs metadata only; every error in one shape
 | Workflow: 80% coverage with exclusions | ✅ | tests per layer; exclusions unchanged + DTOs without logic |
 | Workflow: backend only | ✅ | no frontend files |
 
-**Result**: PASS (constitution 1.7.1). Re-checked after Phase 1: no change.
+**Result**: PASS (constitution 1.7.2). Re-checked after Phase 1: no change.
 
 ## Project Structure
 
@@ -128,14 +128,16 @@ backend/
     ├── Store.Domain.Tests/Entities/        ✚ RefreshTokenTests; ✎ UserTests
     ├── Store.Infrastructure.Tests/
     │   ├── Security/                       ✚ PasswordHasherTests, TokenServiceTests, JwtOptionsValidatorTests
+    │   ├── Catalog/                        ✚ ProductQueryExtensionsTests (search SQL uses ESCAPE)
+    │   ├── Auth/                           ✚ RegisterRaceTests (duplicate email race → 409)
     │   ├── Fixtures/Seeders.cs             ✎ pass PasswordHasher
     │   └── SchemaTests.cs                  ✎ RefreshTokens table, indexes, FK (AC 20)
     └── Store.API.Tests/                    ✚
-        ├── Fixtures/                       StoreApiFactory, MutableTimeProvider, ApiClient helpers
+        ├── Fixtures/                       StoreApiFactory, MutableTimeProvider, HttpExtensions, ErrorTestController
         ├── ErrorShapeTests.cs              US5, SC-004, AC 10
         ├── StartupTests.cs                 missing/short Jwt keys, Swagger Dev-only
         ├── RegisterTests.cs, LoginTests.cs, MeTests.cs                 US3, AC 1–3, 12, 19
-        ├── RefreshTokenTests.cs, LogoutTests.cs, RefreshRaceTests.cs   US4, AC 13–15
+        ├── RefreshEndpointTests.cs, LogoutTests.cs, RefreshRaceTests.cs   US4, AC 13–15
         ├── CategoriesTests.cs              AC 4
         ├── ProductListTests.cs, ProductSearchTests.cs, ProductPagingTests.cs   AC 5–7, 16–18
         ├── ProductDetailsTests.cs, InactiveProductTests.cs, FilterPanelTests.cs  AC 8, 9
@@ -160,8 +162,8 @@ Application and Infrastructure as in 001.
 - **Token issue**: access token (JWT, 15 min) + refresh token (random, stored as hash, 7 days),
   one `RefreshToken` row per login/registration/refresh ([R2](research.md#r2-access-token-creation-and-validation),
   [R4](research.md#r4-refresh-tokens-generation-storage-rotation-reuse)).
-- **Refresh**: hash → load tracked → unknown / expired / logged-out → 401; rotated → revoke all
-  user's active tokens → 401; active → `MarkRotated` + new row in one transaction; concurrency
+- **Refresh**: hash → load tracked → unknown → 401; rotated (checked before expiry) → revoke all
+  user's active tokens → 401; expired / logged-out → 401; active → `MarkRotated` + new row in one transaction; concurrency
   conflict → reload → reuse handling → 401.
 - **Logout**: hash → if active `Revoke(now)` → 204 always.
 - **Catalog**: [R8–R10](research.md#r8-sorting-and-query-binding); details expose `maxQuantity`
@@ -191,9 +193,9 @@ Application and Infrastructure as in 001.
 | 10 | ErrorShapeTests |
 | 11 | ImagesTests |
 | 12 | LoginTests (both seeded accounts); PasswordHasherTests (001-format hash) |
-| 13 | RefreshTokenTests, RefreshRaceTests |
+| 13 | RefreshEndpointTests, RefreshRaceTests |
 | 14 | LogoutTests (both orders) |
-| 15 | RefreshTokenTests (time advanced 7 days; DB scan for plain tokens) |
+| 15 | RefreshEndpointTests (time advanced 7 days; DB scan for plain tokens) |
 | 16, 17 | ProductSearchTests |
 | 18 | ProductPagingTests (every sort, page size 5) |
 | 20 | SchemaTests + full 001 suite |
