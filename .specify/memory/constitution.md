@@ -31,6 +31,12 @@ Removed sections:
   - Project Workflow → Frontend/backend separation: "separate issues" → "separate tasks", to
     match the Work items rule (no external issues).
 
+1.7.1 → 1.7.2 (PATCH):
+  - Core Principles → III. Security: clarified that the enum rule covers the set of sort and
+    filter options; filter values (e.g. color or size names) may be user input when compared as
+    query parameters, never concatenated into SQL. Reason: 002-backend-core analysis finding C1
+    (product list filters by color and size names).
+
 Follow-up TODOs:
   - None.
 
@@ -85,7 +91,9 @@ proof of concept easy to review.
   interpolated parameters.
 - No `FromSqlRaw`, `ExecuteSqlRaw`, or any string-concatenated SQL anywhere.
 - The stored procedure MUST use plain parameters and no dynamic SQL.
-- Sorting and filtering options MUST come from predefined enums, never from raw user strings.
+- The set of sort and filter options MUST come from predefined enums, never from raw user
+  strings. Filter values (such as color or size names) may be user input when they are compared
+  as query parameters; they are never concatenated into SQL.
 - Passwords MUST be hashed with ASP.NET Core `PasswordHasher` (no full ASP.NET Identity).
 - Authentication uses a JWT. The API MUST read it only from the `Authorization: Bearer` header
   and MUST NEVER set cookies. Role-based authorization MUST be applied on every admin endpoint.
@@ -254,4 +262,4 @@ this section applies.
   Security and Data Access principles checked explicitly (see Quality Gates). Plans produced by
   `/speckit-plan` must pass a Constitution Check against this document.
 
-**Version**: 1.7.1 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-24
+**Version**: 1.7.2 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-25
