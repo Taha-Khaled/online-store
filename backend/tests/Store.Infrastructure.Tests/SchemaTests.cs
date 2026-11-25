@@ -12,7 +12,7 @@ public class SchemaTests : IAsyncLifetime
     private static readonly string[] ExpectedTables =
     [
         "Users", "Categories", "Products", "Colors", "Sizes",
-        "ProductVariants", "ProductImages", "CartItems", "Orders", "OrderItems"
+        "ProductVariants", "ProductImages", "CartItems", "Orders", "OrderItems", "RefreshTokens"
     ];
 
     private static readonly string[] ExpectedCheckConstraints =
@@ -25,15 +25,19 @@ public class SchemaTests : IAsyncLifetime
     [
         "IX_Users_Email", "IX_Categories_Slug", "IX_Products_Slug", "IX_Colors_Name", "IX_Sizes_Name",
         "IX_ProductVariants_Sku", "IX_Orders_OrderNumber", "IX_ProductVariants_ProductId_ColorId_SizeId",
-        "IX_CartItems_UserId_ProductVariantId", "IX_OrderItems_OrderId_ProductVariantId"
+        "IX_CartItems_UserId_ProductVariantId", "IX_OrderItems_OrderId_ProductVariantId",
+        "IX_RefreshTokens_TokenHash"
     ];
 
-    // data-model.md "Requirement mapping": FR-015.
+    // data-model.md "Requirement mapping": FR-015; 002 data-model.md "New: RefreshToken".
     private static readonly string[] ExpectedLookupIndexes =
     [
         "IX_Products_CategoryId", "IX_Products_IsActive_IsFeatured",
-        "IX_Orders_UserId", "IX_Orders_Status", "IX_Orders_CreatedAt"
+        "IX_Orders_UserId", "IX_Orders_Status", "IX_Orders_CreatedAt",
+        "IX_RefreshTokens_UserId"
     ];
+
+    private sealed record ColumnInfo(string Name, string Type, int? MaxLength, bool IsNullable);
 
     private readonly TestDatabase _db = new();
 
@@ -70,6 +74,49 @@ public class SchemaTests : IAsyncLifetime
         (await context.CartItems.CountAsync()).ShouldBe(0);
         (await context.Orders.CountAsync()).ShouldBe(0);
         (await context.OrderItems.CountAsync()).ShouldBe(0);
+        (await context.RefreshTokens.CountAsync()).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Migrate_CreatesRefreshTokensColumns()
+    {
+        await using var context = _db.CreateContext();
+
+        var columns = await context.Database
+            .SqlQuery<ColumnInfo>($"""
+                SELECT COLUMN_NAME AS Name, DATA_TYPE AS Type, CHARACTER_MAXIMUM_LENGTH AS MaxLength,
+                       CAST(CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END AS bit) AS IsNullable
+                FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'RefreshTokens'
+                """)
+            .ToListAsync();
+
+        columns.ShouldBe(
+        [
+            new ColumnInfo("Id", "int", null, false),
+            new ColumnInfo("UserId", "int", null, false),
+            new ColumnInfo("TokenHash", "varchar", 64, false),
+            new ColumnInfo("CreatedAt", "datetime2", null, false),
+            new ColumnInfo("ExpiresAt", "datetime2", null, false),
+            new ColumnInfo("RevokedAt", "datetime2", null, true),
+            new ColumnInfo("ReplacedByTokenHash", "varchar", 64, true)
+        ], ignoreOrder: true);
+    }
+
+    [Fact]
+    public async Task Migrate_RefreshTokensCascadeFromUsers()
+    {
+        await using var context = _db.CreateContext();
+
+        var deleteAction = await context.Database
+            .SqlQuery<string>($"""
+                SELECT fk.delete_referential_action_desc AS [Value]
+                FROM sys.foreign_keys fk
+                WHERE fk.parent_object_id = OBJECT_ID('dbo.RefreshTokens')
+                  AND fk.referenced_object_id = OBJECT_ID('dbo.Users')
+                """)
+            .ToListAsync();
+
+        deleteAction.ShouldBe(["CASCADE"]);
     }
 
     [Fact]
@@ -141,5 +188,37 @@ public class SchemaTests : IAsyncLifetime
 
         stored.CreatedAt.Kind.ShouldBe(DateTimeKind.Utc);
         stored.CreatedAt.ShouldBe(createdAt);
+    }
+
+    [Fact]
+    public async Task RefreshToken_RoundTrip_KeepsUtcDatesAndDeletesWithUser()
+    {
+        var createdAt = new DateTime(2026, 11, 24, 12, 0, 0, DateTimeKind.Utc);
+        await using (var context = _db.CreateContext())
+        {
+            var user = new User("Token User", "token@store.local", "01000000003", "hash", Role.Customer, createdAt);
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+
+            var token = new RefreshToken(user.Id, new string('A', 64), createdAt, createdAt.AddDays(7));
+            token.MarkRotated(createdAt.AddMinutes(5), new string('B', 64));
+            context.RefreshTokens.Add(token);
+            await context.SaveChangesAsync();
+        }
+
+        await using (var readContext = _db.CreateContext())
+        {
+            var stored = await readContext.RefreshTokens.SingleAsync();
+            stored.ExpiresAt.Kind.ShouldBe(DateTimeKind.Utc);
+            stored.RevokedAt.ShouldBe(createdAt.AddMinutes(5));
+            stored.RevokedAt.ShouldNotBeNull().Kind.ShouldBe(DateTimeKind.Utc);
+            stored.IsRotated.ShouldBeTrue();
+
+            readContext.Users.Remove(await readContext.Users.SingleAsync());
+            await readContext.SaveChangesAsync();
+        }
+
+        await using var checkContext = _db.CreateContext();
+        (await checkContext.RefreshTokens.CountAsync()).ShouldBe(0);
     }
 }
