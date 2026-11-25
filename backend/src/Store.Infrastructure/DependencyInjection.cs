@@ -29,6 +29,9 @@ public static class DependencyInjection
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
         services.AddSingleton<ITokenService, TokenService>();
 
+        services.AddOptions<ShopOptions>().Bind(configuration.GetSection(ShopOptions.SectionName)).ValidateOnStart();
+        services.AddSingleton<IValidateOptions<ShopOptions>, ShopOptionsValidator>();
+
         services.AddOptions<SeedOptions>().Bind(configuration.GetSection(SeedOptions.SectionName));
         services.AddScoped<AccountSeeder>();
         services.AddScoped<CatalogSeeder>();

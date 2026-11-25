@@ -2,6 +2,7 @@ using Store.API.Binding;
 using Store.API.Errors;
 using Store.API.Extensions;
 using Store.Application;
+using Store.Application.Common;
 using Store.Infrastructure;
 using Microsoft.Extensions.Options;
 using Store.Infrastructure.Security;
@@ -31,8 +32,9 @@ builder.Services.AddSwagger();
 
 var app = builder.Build();
 
-// Fail fast, before touching the database, when a JWT setting is missing or invalid (FR-009).
+// Fail fast, before touching the database, when a required setting is missing or invalid.
 _ = app.Services.GetRequiredService<IOptions<JwtOptions>>().Value;
+_ = app.Services.GetRequiredService<IOptions<ShopOptions>>().Value;
 
 await using (var scope = app.Services.CreateAsyncScope())
 {
