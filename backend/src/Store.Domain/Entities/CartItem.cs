@@ -4,6 +4,8 @@ public class CartItem
 {
     public CartItem(int userId, int productVariantId, int quantity, DateTime addedAt)
     {
+        EnsureValidQuantity(quantity);
+
         UserId = userId;
         ProductVariantId = productVariantId;
         Quantity = quantity;
@@ -18,4 +20,20 @@ public class CartItem
 
     public User User { get; private set; } = null!;
     public ProductVariant ProductVariant { get; private set; } = null!;
+
+    /// <summary>Sets the line quantity (1 to <see cref="StoreLimits.MaxQuantityPerVariant"/>).</summary>
+    public void SetQuantity(int quantity)
+    {
+        EnsureValidQuantity(quantity);
+        Quantity = quantity;
+    }
+
+    private static void EnsureValidQuantity(int quantity)
+    {
+        if (quantity is < 1 or > StoreLimits.MaxQuantityPerVariant)
+        {
+            throw new DomainException(
+                $"Cart quantity must be between 1 and {StoreLimits.MaxQuantityPerVariant}.");
+        }
+    }
 }
