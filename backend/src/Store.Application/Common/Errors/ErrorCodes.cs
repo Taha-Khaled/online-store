@@ -16,4 +16,17 @@ public static class ErrorCodes
     public const string UnsupportedMediaType = "unsupportedMediaType";
     public const string RequestFailed = "requestFailed";
     public const string InternalError = "internalError";
+
+    // 003 shopping (research R11)
+    public const string CartEmpty = "cartEmpty";
+    public const string MaxQuantityExceeded = "maxQuantityExceeded";
+    public const string CartItemNotFound = "cartItemNotFound";
+    public const string VariantNotFound = "variantNotFound";
+    public const string OrderNotFound = "orderNotFound";
+    public const string InsufficientStock = "insufficientStock";
+    public const string CartFull = "cartFull";
+    public const string CartChanged = "cartChanged";
+    public const string CheckoutConflict = "checkoutConflict";
+    public const string OrderCannotBeCancelled = "orderCannotBeCancelled";
+    public const string OrderConflict = "orderConflict";
 }

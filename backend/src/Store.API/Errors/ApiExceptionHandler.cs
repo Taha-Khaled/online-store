@@ -40,9 +40,16 @@ public sealed class ApiExceptionHandler(ILogger<ApiExceptionHandler> logger) : I
     private static (int StatusCode, ErrorResponse Error) Map(Exception exception) => exception switch
     {
         ValidationException validation => (StatusCodes.Status400BadRequest, new ErrorResponse(validation.Code, validation.Message, validation.Errors)),
-        UnauthorizedException unauthorized => (StatusCodes.Status401Unauthorized, new ErrorResponse(unauthorized.Code, unauthorized.Message)),
-        NotFoundException notFound => (StatusCodes.Status404NotFound, new ErrorResponse(notFound.Code, notFound.Message)),
-        ConflictException conflict => (StatusCodes.Status409Conflict, new ErrorResponse(conflict.Code, conflict.Message)),
+        AppException app => (StatusFor(app), new ErrorResponse(app.Code, app.Message, Details: app.Details)),
         _ => (StatusCodes.Status500InternalServerError, new ErrorResponse(ErrorCodes.InternalError, GenericMessage))
+    };
+
+    private static int StatusFor(AppException exception) => exception switch
+    {
+        BadRequestException => StatusCodes.Status400BadRequest,
+        UnauthorizedException => StatusCodes.Status401Unauthorized,
+        NotFoundException => StatusCodes.Status404NotFound,
+        ConflictException => StatusCodes.Status409Conflict,
+        _ => StatusCodes.Status500InternalServerError
     };
 }
