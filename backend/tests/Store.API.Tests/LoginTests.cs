@@ -75,6 +75,24 @@ public class LoginTests(StoreApiFactory factory) : IClassFixture<StoreApiFactory
     }
 
     [Fact]
+    public async Task PasswordLongerThan128_Returns400()
+    {
+        var response = await _client.LoginAsync("customer@store.local", new string('a', 129));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await response.ReadErrorAsync()).Errors.ShouldNotBeNull().Keys.ShouldBe(["password"]);
+    }
+
+    [Fact]
+    public async Task PasswordOf128_IsChecked()
+    {
+        var response = await _client.LoginAsync("customer@store.local", new string('a', 128));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        (await response.ReadErrorAsync()).Code.ShouldBe("invalidCredentials");
+    }
+
+    [Fact]
     public async Task Login_NeverSetsCookies()
     {
         var response = await _client.LoginAsync("customer@store.local", StoreApiFactory.CustomerPassword);
