@@ -96,19 +96,19 @@ no change
 
 ### Implementation for User Story 2
 
-- [ ] T018 [P] [US2] Create `SeedOptions` in `backend/src/Store.Infrastructure/Seeding/SeedOptions.cs` (`Enabled` default true, `AdminPassword`, `CustomerPassword`, `ImagesPath`), bound from the `Seed` configuration section
-- [ ] T019 [P] [US2] Create `backend/src/Store.Infrastructure/Seeding/Data/AccountSeedData.cs` with the two accounts from spec.md "Seed Data → Accounts" (email, full name, role, fixed demo phone); passwords are not here
-- [ ] T020 [P] [US2] Create `backend/src/Store.Infrastructure/Seeding/Data/CatalogSeedData.cs`: categories with parents and SKU codes, color SKU codes, the 18 products (number, name, slug, short description, price, featured, category, ordered color list, size range) and the six special stock values, all from spec.md "Seed Data"
-- [ ] T021 [P] [US2] Create `backend/src/Store.Infrastructure/Seeding/Data/DemoOrderSeedData.cs` with the 8 demo orders from spec.md "Demo orders" (number, days ago, status, items by product/color/size/quantity) and the fixed Cairo shipping address
-- [ ] T022 [US2] Implement `AccountSeeder` in `backend/src/Store.Infrastructure/Seeding/AccountSeeder.cs`, depending on `IAppDbContext` (not `AppDbContext`, constitution II): per account, skip if the email exists; otherwise require the password (throw `InvalidOperationException` naming `Seed:AdminPassword` / `Seed:CustomerPassword`), hash with `PasswordHasher<User>`, `CreatedAt` from `TimeProvider` (data-model.md User.PasswordHash, User.CreatedAt)
-- [ ] T023 [US2] Implement `CatalogSeeder` in `backend/src/Store.Infrastructure/Seeding/CatalogSeeder.cs`, depending on `IAppDbContext`: return if any product exists; require the demo customer (throw if missing); one own transaction via `IAppDbContext.Database` (research R4); build categories, products (`CreatedAt` = T − 60 days), variants with SKU `<category code>-<NNN>-<color code>-<size>` and stock = special value or the deterministic rule (research R9), images (`/images/products/<slug>-<color>.jpg`, `IsMain` true, `DisplayOrder` 1; log a warning with the file name only when the file is missing under `ImagesPath`; the row is inserted either way), orders via `Order.CreateHistorical` (`CreatedAt` = T − N days) with item snapshots and totals; the shipping fee is the literal historical value 50 from spec.md "Demo orders", on purpose, not the configured checkout fee (seeded totals must match the spec); commit
-- [ ] T024 [US2] Implement `DatabaseSeeder` in `backend/src/Store.Infrastructure/Seeding/DatabaseSeeder.cs`: `SeedAsync` returns immediately when `Enabled` is false (reads no other setting); otherwise runs `AccountSeeder` then `CatalogSeeder`
-- [ ] T025 [US2] Implement `DatabaseInitializer.InitializeAsync(bool isDevelopment, CancellationToken)` in `backend/src/Store.Infrastructure/Seeding/DatabaseInitializer.cs`, depending on `IAppDbContext`: Development → `MigrateAsync` then seed; otherwise seed only if `GetPendingMigrationsAsync()` is empty, else log one warning with the pending count and return (research R3, spec FR-018)
-- [ ] T026 [US2] Register `SeedOptions`, the seeders and `DatabaseInitializer` in `backend/src/Store.Infrastructure/DependencyInjection.cs`; call `InitializeAsync(app.Environment.IsDevelopment())` in `backend/src/Store.API/Program.cs`, setting `ImagesPath` to `<ContentRoot>/SeedImages` when not configured; add `Seed:Enabled: true` to `backend/src/Store.API/appsettings.json`; add a copy-to-output rule for `SeedImages/**/*.jpg` in `backend/src/Store.API/Store.API.csproj` and commit the 37 images the developer placed in `backend/src/Store.API/SeedImages/`
+- [X] T018 [P] [US2] Create `SeedOptions` in `backend/src/Store.Infrastructure/Seeding/SeedOptions.cs` (`Enabled` default true, `AdminPassword`, `CustomerPassword`, `ImagesPath`), bound from the `Seed` configuration section
+- [X] T019 [P] [US2] Create `backend/src/Store.Infrastructure/Seeding/Data/AccountSeedData.cs` with the two accounts from spec.md "Seed Data → Accounts" (email, full name, role, fixed demo phone); passwords are not here
+- [X] T020 [P] [US2] Create `backend/src/Store.Infrastructure/Seeding/Data/CatalogSeedData.cs`: categories with parents and SKU codes, color SKU codes, the 18 products (number, name, slug, short description, price, featured, category, ordered color list, size range) and the six special stock values, all from spec.md "Seed Data"
+- [X] T021 [P] [US2] Create `backend/src/Store.Infrastructure/Seeding/Data/DemoOrderSeedData.cs` with the 8 demo orders from spec.md "Demo orders" (number, days ago, status, items by product/color/size/quantity) and the fixed Cairo shipping address
+- [X] T022 [US2] Implement `AccountSeeder` in `backend/src/Store.Infrastructure/Seeding/AccountSeeder.cs`, depending on `IAppDbContext` (not `AppDbContext`, constitution II): per account, skip if the email exists; otherwise require the password (throw `InvalidOperationException` naming `Seed:AdminPassword` / `Seed:CustomerPassword`), hash with `PasswordHasher<User>`, `CreatedAt` from `TimeProvider` (data-model.md User.PasswordHash, User.CreatedAt)
+- [X] T023 [US2] Implement `CatalogSeeder` in `backend/src/Store.Infrastructure/Seeding/CatalogSeeder.cs`, depending on `IAppDbContext`: return if any product exists; require the demo customer (throw if missing); one own transaction via `IAppDbContext.Database` (research R4); build categories, products (`CreatedAt` = T − 60 days), variants with SKU `<category code>-<NNN>-<color code>-<size>` and stock = special value or the deterministic rule (research R9), images (`/images/products/<slug>-<color>.jpg`, `IsMain` true, `DisplayOrder` 1; log a warning with the file name only when the file is missing under `ImagesPath`; the row is inserted either way), orders via `Order.CreateHistorical` (`CreatedAt` = T − N days) with item snapshots and totals; the shipping fee is the literal historical value 50 from spec.md "Demo orders", on purpose, not the configured checkout fee (seeded totals must match the spec); commit
+- [X] T024 [US2] Implement `DatabaseSeeder` in `backend/src/Store.Infrastructure/Seeding/DatabaseSeeder.cs`: `SeedAsync` returns immediately when `Enabled` is false (reads no other setting); otherwise runs `AccountSeeder` then `CatalogSeeder`
+- [X] T025 [US2] Implement `DatabaseInitializer.InitializeAsync(bool isDevelopment, CancellationToken)` in `backend/src/Store.Infrastructure/Seeding/DatabaseInitializer.cs`, depending on `IAppDbContext`: Development → `MigrateAsync` then seed; otherwise seed only if `GetPendingMigrationsAsync()` is empty, else log one warning with the pending count and return (research R3, spec FR-018)
+- [X] T026 [US2] Register `SeedOptions`, the seeders and `DatabaseInitializer` in `backend/src/Store.Infrastructure/DependencyInjection.cs`; call `InitializeAsync(app.Environment.IsDevelopment())` in `backend/src/Store.API/Program.cs`, setting `ImagesPath` to `<ContentRoot>/SeedImages` when not configured; add `Seed:Enabled: true` to `backend/src/Store.API/appsettings.json`; add a copy-to-output rule for `SeedImages/**/*.jpg` in `backend/src/Store.API/Store.API.csproj` and commit the 37 images the developer placed in `backend/src/Store.API/SeedImages/`
 
 ### Tests for User Story 2
 
-- [ ] T027 [US2] Write `backend/tests/Store.Infrastructure.Tests/SeedingTests.cs` (fixed seed time via `FixedTimeProvider`):
+- [X] T027 [US2] Write `backend/tests/Store.Infrastructure.Tests/SeedingTests.cs` (fixed seed time via `FixedTimeProvider`):
   - SC-002 exact counts (2 users, 12 categories, 18 products, 177 variants, 37 images, 8 orders, 12 order items)
   - all 18 products: price, featured flag and category match spec.md "Products" (US2-1)
   - spot checks: SKU `MTS-001-BLK-M`, the six special stock values, every order's subtotal/total/status/date offset, order-item snapshots, passwords stored as verifiable hashes
@@ -118,7 +118,7 @@ no change
   - `Enabled = false` with no passwords → completes and every runtime-seeded table is empty (SC-009, US2-7)
   - images: `ImagesPath` pointing to a missing folder → 37 warnings (file names only) and 37 image rows; a temp folder containing one of the files → 36 warnings, none for that file, still 37 rows (spec edge case "image file missing")
   - all green
-- [ ] T028 [US2] Write `backend/tests/Store.Infrastructure.Tests/InitializerTests.cs`: Development → migrates and seeds; non-Development with no pending migrations → seeds without migrating; non-Development on an empty database with no schema (`IRelationalDatabaseCreator.CreateAsync`) → no exception, exactly one warning containing the pending count (assert against `Database.GetMigrations().Count()`, not a literal), no migrations applied, no seed rows (research R3, spec FR-018); all green
+- [X] T028 [US2] Write `backend/tests/Store.Infrastructure.Tests/InitializerTests.cs`: Development → migrates and seeds; non-Development with no pending migrations → seeds without migrating; non-Development on an empty database with no schema (`IRelationalDatabaseCreator.CreateAsync`) → no exception, exactly one warning containing the pending count (assert against `Database.GetMigrations().Count()`, not a literal), no migrations applied, no seed rows (research R3, spec FR-018); all green
 
 **Checkpoint**: US1 + US2 pass; running the API in Development produces the seeded store
 
@@ -132,11 +132,11 @@ no change
 
 ### Tests for User Story 3
 
-- [ ] T029 [US3] Write `backend/tests/Store.Infrastructure.Tests/ConstraintTests.cs`, sending statements to SQL Server with `ExecuteUpdateAsync`/`ExecuteDeleteAsync` or fresh contexts (research R7): stock −1 rejected, 0 accepted; cart/order item quantity 0 and 6 rejected, 1 and 5 accepted; price 0 rejected; duplicate product+color+size, duplicate SKU, email, slugs, order number, cart user+variant, order+variant rejected (FR-003/004); delete of an ordered variant or its product rejected with nothing removed; delete of a never-ordered product removes its variants and images; delete of an order removes its items; delete of a category with products or children rejected; delete of a user with orders rejected; delete of a user or variant removes their cart items (implementation already delivered by T012–T016)
+- [X] T029 [US3] Write `backend/tests/Store.Infrastructure.Tests/ConstraintTests.cs`, sending statements to SQL Server with `ExecuteUpdateAsync`/`ExecuteDeleteAsync` or fresh contexts (research R7): stock −1 rejected, 0 accepted; cart/order item quantity 0 and 6 rejected, 1 and 5 accepted; price 0 rejected; duplicate product+color+size, duplicate SKU, email, slugs, order number, cart user+variant, order+variant rejected (FR-003/004); delete of an ordered variant or its product rejected with nothing removed; delete of a never-ordered product removes its variants and images; delete of an order removes its items; delete of a category with products or children rejected; delete of a user with orders rejected; delete of a user or variant removes their cart items (implementation already delivered by T012–T016)
 
 ### Implementation for User Story 3
 
-- [ ] T030 [US3] If T029 exposes a gap, fix the affected configuration in `backend/src/Store.Infrastructure/Persistence/Configurations/` and add a new named migration (never edit `InitialCreate` once applied elsewhere, constitution II); otherwise mark done with no code change and no commit
+- [X] T030 [US3] If T029 exposes a gap, fix the affected configuration in `backend/src/Store.Infrastructure/Persistence/Configurations/` and add a new named migration (never edit `InitialCreate` once applied elsewhere, constitution II); otherwise mark done with no code change and no commit
 
 **Checkpoint**: US3 tests pass (SC-003)
 
@@ -151,7 +151,7 @@ concurrency exception
 
 ### Tests for User Story 4
 
-- [ ] T031 [US4] Write `backend/tests/Store.Infrastructure.Tests/ConcurrencyTests.cs`: load the same variant in two `AppDbContext` instances, change `Stock` in both, save the first (succeeds), save the second (throws `DbUpdateConcurrencyException`); stored stock equals the first save's value (SC-004; data-model.md ProductVariant.RowVersion; implementation already delivered by T014/T016)
+- [X] T031 [US4] Write `backend/tests/Store.Infrastructure.Tests/ConcurrencyTests.cs`: load the same variant in two `AppDbContext` instances, change `Stock` in both, save the first (succeeds), save the second (throws `DbUpdateConcurrencyException`); stored stock equals the first save's value (SC-004; data-model.md ProductVariant.RowVersion; implementation already delivered by T014/T016)
 
 **Checkpoint**: US4 test passes
 
@@ -166,11 +166,11 @@ expected results
 
 ### Implementation for User Story 5
 
-- [ ] T032 [US5] Add migration `AddDashboardStatsProcedure` in `backend/src/Store.Infrastructure/Persistence/Migrations/` (`dotnet ef migrations add AddDashboardStatsProcedure ...`): `Up` creates `dbo.sp_GetDashboardStats` with `migrationBuilder.Sql` exactly per [contracts/sp_GetDashboardStats.md](contracts/sp_GetDashboardStats.md) (parameters, half-open range, JSON built into an `nvarchar(max)` variable, `SELECT @json AS [Value]`, `JSON_QUERY(ISNULL(..., '[]'))` lists, ordering, no dynamic SQL; research R2); `Down` drops it; apply it to the local SQL Server
+- [X] T032 [US5] Add migration `AddDashboardStatsProcedure` in `backend/src/Store.Infrastructure/Persistence/Migrations/` (`dotnet ef migrations add AddDashboardStatsProcedure ...`): `Up` creates `dbo.sp_GetDashboardStats` with `migrationBuilder.Sql` exactly per [contracts/sp_GetDashboardStats.md](contracts/sp_GetDashboardStats.md) (parameters, half-open range, JSON built into an `nvarchar(max)` variable, `SELECT @json AS [Value]`, `JSON_QUERY(ISNULL(..., '[]'))` lists, ordering, no dynamic SQL; research R2); `Down` drops it; apply it to the local SQL Server
 
 ### Tests for User Story 5
 
-- [ ] T033 [US5] Write `backend/tests/Store.Infrastructure.Tests/DashboardStatsTests.cs` using the caller in [contracts/sp_GetDashboardStats.md](contracts/sp_GetDashboardStats.md) and a test-local record for the JSON: procedure exists after migration (US1-1); seeded range `[T − 30 days, T + 1 minute)`, threshold 3 → every expected value and list order in the contract (US5-1, SC-005); empty range → zeros, `bestSellers` `[]`, `lowStockVariants` unchanged (US5-2); omitted threshold → 3 (US5-3, call without `@LowStockThreshold`); boundary: an order exactly at `@FromUtc` counted, exactly at `@ToUtc` not counted; all green
+- [X] T033 [US5] Write `backend/tests/Store.Infrastructure.Tests/DashboardStatsTests.cs` using the caller in [contracts/sp_GetDashboardStats.md](contracts/sp_GetDashboardStats.md) and a test-local record for the JSON: procedure exists after migration (US1-1); seeded range `[T − 30 days, T + 1 minute)`, threshold 3 → every expected value and list order in the contract (US5-1, SC-005); empty range → zeros, `bestSellers` `[]`, `lowStockVariants` unchanged (US5-2); omitted threshold → 3 (US5-3, call without `@LowStockThreshold`); boundary: an order exactly at `@FromUtc` counted, exactly at `@ToUtc` not counted; all green
 
 **Checkpoint**: all user stories pass independently
 
@@ -178,9 +178,9 @@ expected results
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T034 Run `dotnet test backend --settings backend/coverage.runsettings --collect:"XPlat Code Coverage"`; confirm all tests pass and changed non-excluded code (seeders, initializer, DbContext) has ≥ 80% line and branch coverage; report the numbers
-- [ ] T035 Run the [quickstart.md](quickstart.md) validation steps 1–4 against the local SQL Server and record the results
-- [ ] T036 Security/Data Access review of `backend/` (constitution Quality Gates): no `FromSqlRaw`/`ExecuteSqlRaw`/concatenated SQL, no secrets or connection strings in committed files, no data annotations on entities, seeders/initializer use `IAppDbContext` only, no leftover debug code or commented-out code
+- [X] T034 Run `dotnet test backend --settings backend/coverage.runsettings --collect:"XPlat Code Coverage"`; confirm all tests pass and changed non-excluded code (seeders, initializer, DbContext) has ≥ 80% line and branch coverage; report the numbers
+- [X] T035 Run the [quickstart.md](quickstart.md) validation steps 1–4 against the local SQL Server and record the results
+- [X] T036 Security/Data Access review of `backend/` (constitution Quality Gates): no `FromSqlRaw`/`ExecuteSqlRaw`/concatenated SQL, no secrets or connection strings in committed files, no data annotations on entities, seeders/initializer use `IAppDbContext` only, no leftover debug code or commented-out code
 
 ---
 
