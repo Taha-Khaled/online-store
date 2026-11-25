@@ -8,8 +8,9 @@ using Store.API.Tests.Fixtures;
 namespace Store.API.Tests;
 
 /// <summary>
-/// US5-1/2: the API refuses to start with missing or weak JWT settings, before touching the
-/// database (FR-009), and Swagger is available in Development only (FR-006).
+/// US5-1/2: the API refuses to start with missing or weak JWT settings or a negative shipping fee,
+/// before touching the database (002 FR-009, 003 research R3), and Swagger is available in
+/// Development only (FR-006).
 /// </summary>
 public class StartupTests
 {
@@ -18,7 +19,8 @@ public class StartupTests
     [InlineData("Jwt:Key", "0123456789abcdef0123456789abcde", "'Jwt:Key' must be at least 32 bytes (UTF-8).")]
     [InlineData("Jwt:Issuer", "", "'Jwt:Issuer' is not configured.")]
     [InlineData("Jwt:Audience", "", "'Jwt:Audience' is not configured.")]
-    public async Task InvalidJwtSetting_StopsStartupNamingTheKey_BeforeCreatingTheDatabase(string key, string value, string message)
+    [InlineData("Shop:ShippingFee", "-1", "'Shop:ShippingFee' must be 0 or more.")]
+    public async Task InvalidRequiredSetting_StopsStartupNamingTheKey_BeforeCreatingTheDatabase(string key, string value, string message)
     {
         var factory = new OverriddenSettingFactory(key, value);
         try
