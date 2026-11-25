@@ -7,6 +7,8 @@ namespace Store.Infrastructure.Persistence;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IAppDbContext
 {
+    public const string OrderNumberSequence = "OrderNumberSequence";
+
     public DbSet<User> Users => Set<User>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Product> Products => Set<Product>();
@@ -22,6 +24,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        // Order numbers ORD-1001, ORD-1002, ... above the seeded ORD-0001..ORD-0008 (003 research R4).
+        modelBuilder.HasSequence<long>(OrderNumberSequence).StartsAt(1001).IncrementsBy(1);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

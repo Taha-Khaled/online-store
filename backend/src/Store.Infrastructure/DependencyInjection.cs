@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Store.Application.Common;
 using Store.Application.Common.Security;
 using Store.Infrastructure.Security;
+using Store.Infrastructure.Orders;
 using Store.Infrastructure.Persistence;
 using Store.Infrastructure.Seeding;
 
@@ -31,6 +32,7 @@ public static class DependencyInjection
 
         services.AddOptions<ShopOptions>().Bind(configuration.GetSection(ShopOptions.SectionName)).ValidateOnStart();
         services.AddSingleton<IValidateOptions<ShopOptions>, ShopOptionsValidator>();
+        services.AddScoped<IOrderNumberGenerator, OrderNumberGenerator>();
 
         services.AddOptions<SeedOptions>().Bind(configuration.GetSection(SeedOptions.SectionName));
         services.AddScoped<AccountSeeder>();

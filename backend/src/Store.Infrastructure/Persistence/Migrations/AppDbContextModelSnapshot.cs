@@ -22,6 +22,9 @@ namespace Store.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.HasSequence("OrderNumberSequence")
+                .StartsAt(1001L);
+
             modelBuilder.Entity("Store.Domain.Entities.CartItem", b =>
                 {
                     b.Property<int>("Id")
