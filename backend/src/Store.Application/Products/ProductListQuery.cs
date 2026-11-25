@@ -12,9 +12,9 @@ public sealed record ProductListQuery
 
     public string? Category { get; init; }
 
-    public IReadOnlyList<string> Color { get; init; } = [];
+    public IReadOnlyList<string>? Color { get; init; }
 
-    public IReadOnlyList<string> Size { get; init; } = [];
+    public IReadOnlyList<string>? Size { get; init; }
 
     public decimal? MinPrice { get; init; }
 
