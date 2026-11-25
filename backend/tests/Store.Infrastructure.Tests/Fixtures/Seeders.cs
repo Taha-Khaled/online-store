@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Store.Infrastructure.Persistence;
+using Store.Infrastructure.Security;
 using Store.Infrastructure.Seeding;
 
 namespace Store.Infrastructure.Tests.Fixtures;
@@ -27,7 +28,7 @@ public static class Seeders
         var time = new FixedTimeProvider(SeedTime);
         return new DatabaseSeeder(
             wrapped,
-            new AccountSeeder(context, wrapped, time),
+            new AccountSeeder(context, wrapped, new PasswordHasher(), time),
             CreateCatalogSeeder(context, options, catalogLogger));
     }
 
