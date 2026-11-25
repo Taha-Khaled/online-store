@@ -104,6 +104,11 @@ public class RegisterTests(StoreApiFactory factory) : IClassFixture<StoreApiFact
     [InlineData("phone", "+", false)]
     [InlineData("phone", "0123-456", false)]
     [InlineData("phone", "12+34", false)]
+    [InlineData("phone", "٠١٢٣٤٥٦٧٨٩", false)]
+    [InlineData("phone", "+٢٠١٠٠٠", false)]
+    [InlineData("phone", "१२३४५६", false)]
+    [InlineData("phone", "０１２３４", false)]
+    [InlineData("password", "كلمةسرية١٢", true)]
     [InlineData("password", "abcdefg1", true)]
     [InlineData("password", "abcdef1", false)]
     [InlineData("password", "abcdefgh", false)]
@@ -120,12 +125,15 @@ public class RegisterTests(StoreApiFactory factory) : IClassFixture<StoreApiFact
     [InlineData("email", 257, false)]
     [InlineData("phone", 20, true)]
     [InlineData("phone", 21, false)]
+    [InlineData("password", 128, true)]
+    [InlineData("password", 129, false)]
     public async Task FieldRules_AtLengthLimits(string field, int length, bool valid)
     {
         var value = field switch
         {
             "email" => Guid.NewGuid().ToString("N") + new string('a', length - 32 - EmailDomain.Length) + EmailDomain,
             "phone" => new string('1', length),
+            "password" => new string('a', length - 1) + "1",
             _ => new string('a', length)
         };
 
