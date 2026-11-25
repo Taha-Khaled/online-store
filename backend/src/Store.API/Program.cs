@@ -1,3 +1,4 @@
+using Store.API.Binding;
 using Store.API.Errors;
 using Store.Application;
 using Store.Infrastructure;
@@ -11,7 +12,11 @@ builder.Services.PostConfigure<SeedOptions>(options =>
     options.ImagesPath ??= Path.Combine(builder.Environment.ContentRootPath, "SeedImages"));
 
 builder.Services
-    .AddControllers(options => options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true)
+    .AddControllers(options =>
+    {
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+        options.ModelBinderProviders.Insert(0, new ProductSortModelBinderProvider());
+    })
     .ConfigureApiBehaviorOptions(options =>
     {
         options.SuppressMapClientErrors = true;
