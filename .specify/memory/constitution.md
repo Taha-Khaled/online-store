@@ -37,6 +37,13 @@ Removed sections:
     query parameters, never concatenated into SQL. Reason: 002-backend-core analysis finding C1
     (product list filters by color and size names).
 
+1.7.2 → 1.7.3 (PATCH):
+  - Core Principles → IV. Inventory & Concurrency: a checkout concurrency conflict is retried; if
+    stock is no longer enough the checkout fails cleanly with `cartChanged` listing the affected
+    items; if every attempt conflicts, `checkoutConflict`. Replaces the single `outOfStock` error.
+    Reason: 003-backend-shopping spec (FR-016, FR-018); `cartChanged` with the affected items lets
+    the customer fix the cart.
+
 Follow-up TODOs:
   - None.
 
@@ -111,8 +118,9 @@ proof of concept easy to review.
 - `ProductVariants` has a `rowversion` column used for optimistic concurrency.
 - Database check constraint: `Stock >= 0`.
 - Checkout (create order, deduct stock, clear cart) MUST run in a single transaction.
-- On concurrency conflict, checkout MUST fail cleanly with an `outOfStock` error; it never
-  oversells.
+- On a concurrency conflict, checkout re-reads the stock and retries. If the stock is no longer
+  enough, it MUST fail cleanly with a `cartChanged` error listing the affected items; if every
+  attempt conflicts, with `checkoutConflict`. It never oversells.
 
 **Rationale**: overselling is the most costly failure for a store; it is prevented in code
 and guarded by the database.
@@ -262,4 +270,4 @@ this section applies.
   Security and Data Access principles checked explicitly (see Quality Gates). Plans produced by
   `/speckit-plan` must pass a Constitution Check against this document.
 
-**Version**: 1.7.2 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-25
+**Version**: 1.7.3 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-25
