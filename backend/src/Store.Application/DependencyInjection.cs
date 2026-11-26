@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<CartReader>();
         services.AddScoped<CartService>();
         services.AddScoped<CheckoutService>();
+        services.AddScoped<CustomerOrderService>();
 
         return services;
     }
