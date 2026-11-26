@@ -1,9 +1,7 @@
-using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
+using Store.API.Authorization;
 using Store.Application.Auth;
-using Store.Application.Common.Errors;
 
 namespace Store.API.Controllers;
 
@@ -41,10 +39,5 @@ public sealed class AuthController(AuthService auth, SessionService sessions) : 
     [Authorize]
     [HttpGet("me")]
     public Task<UserResponse> Me(CancellationToken cancellationToken) =>
-        auth.GetCurrentUserAsync(GetUserId(), cancellationToken);
-
-    private int GetUserId() =>
-        int.TryParse(User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value, NumberStyles.None, CultureInfo.InvariantCulture, out var userId)
-            ? userId
-            : throw new UnauthorizedException(ErrorCodes.Unauthorized, "Authentication is required.");
+        auth.GetCurrentUserAsync(User.GetUserId(), cancellationToken);
 }
