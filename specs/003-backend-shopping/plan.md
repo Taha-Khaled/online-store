@@ -49,7 +49,7 @@ interpolated `SqlQuery` for the sequence; exact stock never returned; customer-o
 | I. Rules in Domain/Application, not controllers | ✅ | `Deduct`/`Restock`, `CartItem` range, `CreatePending`, `Cancel` in Domain; customer Pending-only rule in `CustomerOrderService` |
 | I. `Order` owns transitions and items, rejects invalid ones | ✅ | `CreatePending` / `Cancel` + `DomainException` ([R1](research.md#r1-domain-rules)) |
 | I. DB constraints are only a safety net | ✅ | stock ≥ 0, quantity 1–5, unique cart line all checked in code first |
-| I. No MediatR/CQRS/events; feature folders | ✅ | `Cart/`, `Orders/` with services, DTOs, validators |
+| I. No MediatR/CQRS/events; feature folders with Requests/Responses/Validators/Services (1.7.4) | ✅ | `Cart/`, `Orders/` in that layout; existing features moved by T035 |
 | II. `IAppDbContext`, no repository | ✅ | `ChangeTracker` added to the interface for retries |
 | II. Read-only queries `AsNoTracking` + `Select` | ✅ | cart read, order list/details; tracked loads only for checkout, cancel and cart writes |
 | II. Named migration; one stored procedure | ✅ | `AddOrderNumberSequence` (a sequence, not a procedure), `AddOrderRowVersion` |
@@ -64,7 +64,7 @@ interpolated `SqlQuery` for the sequence; exact stock never returned; customer-o
 | Quality Gates: checkout concurrency and order transition tests | ✅ | AC 6/7/8 tests; `OrderTests` |
 | Workflow: approved dependencies; 80% coverage; backend only | ✅ | no new packages |
 
-**Result**: PASS (constitution 1.7.3). Re-checked after Phase 1: no change.
+**Result**: PASS (constitution 1.7.4). Re-checked after Phase 1: no change.
 
 ## Project Structure
 
@@ -99,10 +99,20 @@ backend/
 │   │   │   ├── ConcurrencyRetry.cs          ✚ 3-attempt shell (checkout, cancel)
 │   │   │   ├── IOrderNumberGenerator.cs     ✚
 │   │   │   └── Errors/                      ✎ new codes; AppException.Details; BadRequestException
-│   │   ├── Cart/                            ✚ CartReader (cart query), CartService (add/update/remove/clear),
-│   │   │                                      CartMergeService, DTOs, validators
-│   │   ├── Orders/                          ✚ CheckoutService, CustomerOrderService, DTOs, validators
-│   │   └── Products/ProductService.cs       ✎ uses StoreLimits
+│   │   ├── Auth/, Categories/, Products/    ✎ moved into Requests/ Responses/ Validators/ Services/ (T035)
+│   │   ├── Cart/
+│   │   │   ├── Requests/                    ✚ AddCartItemRequest, UpdateCartItemRequest, MergeCartRequest
+│   │   │   ├── Responses/                   ✚ CartResponse (+ CartItemResponse), CartItemStatus,
+│   │   │   │                                  MergeCartResponse, MergeAdjustmentReason
+│   │   │   ├── Validators/                  ✚ one validator per request
+│   │   │   └── Services/                    ✚ CartReader (cart query), CartService (add/update/remove/clear),
+│   │   │                                      CartMergeService
+│   │   ├── Orders/
+│   │   │   ├── Requests/                    ✚ PlaceOrderRequest, OrderListQuery
+│   │   │   ├── Responses/                   ✚ OrderDetailsResponse, OrderItemResponse, OrderSummaryResponse
+│   │   │   ├── Validators/                  ✚ PlaceOrderRequestValidator, OrderListQueryValidator
+│   │   │   └── Services/                    ✚ CheckoutService, CustomerOrderService, OrderMapping
+│   │   └── Products/Services/ProductService.cs ✎ uses StoreLimits
 │   ├── Store.Infrastructure/
 │   │   ├── Orders/OrderNumberGenerator.cs   ✚ sequence via SqlQuery
 │   │   ├── Persistence/AppDbContext.cs      ✎ HasSequence
@@ -132,7 +142,9 @@ backend/
 ```
 
 **Structure Decision**: extend the 002 layout with `Cart/` and `Orders/` feature folders; no new
-project. `CartReader` builds the cart response (one projection, R7) and is shared by
+project. Every Application feature folder uses `Requests/`, `Responses/`, `Validators/` and
+`Services/`, with namespaces that follow the folders (constitution 1.7.4; T035 moved the existing
+Auth, Categories, Products and Cart files). `CartReader` builds the cart response (one projection, R7) and is shared by
 `CartService` and `CartMergeService`, which keeps each service small and under Sonar's 7-parameter
 constructor limit.
 

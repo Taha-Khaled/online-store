@@ -1,7 +1,7 @@
 # Research: Backend Shopping — Cart, Checkout & Customer Orders
 
 Decisions marked *(developer)* were supplied with `/speckit-plan` (2026-11-25); the others are the
-agent's choices within constitution 1.7.3 and the 002 structure.
+agent's choices within constitution 1.7.4 and the 002 structure.
 
 ## R1. Domain rules
 
@@ -204,3 +204,15 @@ agent's choices within constitution 1.7.3 and the 002 structure.
   parallel calls), `CancelOrderRaceTests` (R6), and `SchemaTests` updated for the sequence and
   `Orders.RowVersion`.
 - **Coverage**: ≥ 80% lines and branches on changed files, async bodies counted (002 settings).
+
+## R14. Application feature folder layout
+
+- **Decision** *(developer, 2026-11-26)*: every Application feature folder has `Requests/`,
+  `Responses/`, `Validators/` and `Services/`; namespaces follow the folders
+  (`Store.Application.<Feature>.<Folder>`). Done for the existing features by T035; Orders and the
+  new Cart files are created in this layout (constitution 1.7.4).
+- **Placement rules**: one validator per file; request-only enums with the requests
+  (`ProductSort`), response-only enums with the responses (`CartItemStatus`,
+  `MergeAdjustmentReason`), mapping/query helpers with the services (`ProductQueryExtensions`,
+  `AuthResponses`, `OrderMapping`). File names unchanged, so the `*Request.cs` / `*Response.cs`
+  coverage exclusions keep working.

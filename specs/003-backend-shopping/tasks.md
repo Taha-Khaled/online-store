@@ -23,6 +23,10 @@ committed once at the end (`docs #003 ...`).
 checkout concurrency (T022, T024) and order transitions (T008, T025, T028) need an explanation of
 the implementation in the report, alongside their tests.
 
+**Layout** (constitution 1.7.4): every Application feature folder has `Requests/`, `Responses/`,
+`Validators/` and `Services/`; namespaces follow the folders (`Store.Application.<Feature>.<Folder>`).
+Every new file follows it (T035 moved the existing ones).
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies on incomplete tasks)
@@ -89,6 +93,17 @@ the cart (spec US1)
 
 ---
 
+## Phase 3.5: Application feature folder layout (refactor)
+
+**Purpose**: one layout for every Application feature before more files are added (constitution
+1.7.4, Clean Architecture)
+
+- [ ] T035 Restructure `backend/src/Store.Application/{Auth,Categories,Products,Cart}/` into `Requests/`, `Responses/`, `Validators/` and `Services/` (Orders is created in that layout by T022): keep file names (coverage excludes `*Request.cs` / `*Response.cs`); split files that mix requests and validators (`Cart/CartRequests.cs` → `Requests/AddCartItemRequest.cs`, `Requests/UpdateCartItemRequest.cs`, `Validators/AddCartItemRequestValidator.cs`, `Validators/UpdateCartItemRequestValidator.cs`); request-only enums go in `Requests/` (`ProductSort`), response-only enums in `Responses/` (`CartItemStatus`), helpers in `Services/` (`ProductQueryExtensions`, `AuthResponses`); namespaces follow the folders (`Store.Application.<Feature>.<Folder>`); update usings in API, Infrastructure and tests; no behavior change; all tests pass
+
+**Checkpoint**: same test results as before the move
+
+---
+
 ## Phase 4: User Story 2 - Customer checks out without overselling (Priority: P1)
 
 **Goal**: cash-on-delivery checkout in one transaction with retry on conflicts
@@ -98,7 +113,7 @@ parallel; compare orders, stock and carts (spec US2)
 
 ### Implementation for User Story 2
 
-- [ ] T022 [US2] Create `backend/src/Store.Application/Orders/`: `PlaceOrderRequest.cs` + `PlaceOrderRequestValidator.cs` (FR-014; strings trimmed; phone rule shared with registration: move the private `IsPhoneNumber` from `backend/src/Store.Application/Auth/RegisterRequestValidator.cs` to `backend/src/Store.Application/Common/Validation/PhoneNumbers.cs` (`IsValid`) and use it from both validators; 002 register tests stay green), `OrderDetailsResponse.cs` / `OrderItemResponse.cs` (contracts/api.md), `OrderMapping.cs` (order → details, `canCancel` = Pending), and `CheckoutService.cs` per research R5 inside `ConcurrencyRetry`: load cart tracked with variant/product/color/size; empty → 400 `cartEmpty`; any non-available → 409 `cartChanged` with `details.items`; `Deduct` (`DomainException` → `cartChanged`); `IOrderNumberGenerator`; `Order.CreatePending` with snapshots (data-model.md OrderItem.ProductName, OrderItem.ColorName, OrderItem.SizeName, OrderItem.UnitPrice, OrderItem.Quantity from current catalog data) and `ShopOptions.ShippingFee`; remove cart lines; save (the retry helper commits); exhausted → 409 `checkoutConflict`; logs user id, order number, line count, attempt, outcome; register in `AddApplication`; add `POST /api/orders` (201, Location `/api/orders/{id}`) in new `backend/src/Store.API/Controllers/OrdersController.cs` (`CustomerOnly`)
+- [ ] T022 [US2] Create `backend/src/Store.Application/Orders/` in the feature folder layout: `Requests/PlaceOrderRequest.cs`, `Validators/PlaceOrderRequestValidator.cs` (FR-014; strings trimmed; phone rule shared with registration: move the private `IsPhoneNumber` from `backend/src/Store.Application/Auth/Validators/RegisterRequestValidator.cs` to `backend/src/Store.Application/Common/Validation/PhoneNumbers.cs` (`IsValid`) and use it from both validators; 002 register tests stay green), `Responses/OrderDetailsResponse.cs` / `Responses/OrderItemResponse.cs` (contracts/api.md), `Services/OrderMapping.cs` (order → details, `canCancel` = Pending), and `Services/CheckoutService.cs` per research R5 inside `ConcurrencyRetry`: load cart tracked with variant/product/color/size; empty → 400 `cartEmpty`; any non-available → 409 `cartChanged` with `details.items`; `Deduct` (`DomainException` → `cartChanged`); `IOrderNumberGenerator`; `Order.CreatePending` with snapshots (data-model.md OrderItem.ProductName, OrderItem.ColorName, OrderItem.SizeName, OrderItem.UnitPrice, OrderItem.Quantity from current catalog data) and `ShopOptions.ShippingFee`; remove cart lines; save (the retry helper commits); exhausted → 409 `checkoutConflict`; logs user id, order number, line count, attempt, outcome; register in `AddApplication`; add `POST /api/orders` (201, Location `/api/orders/{id}`) in new `backend/src/Store.API/Controllers/OrdersController.cs` (`CustomerOnly`)
 
 ### Tests for User Story 2
 
@@ -118,7 +133,7 @@ orders and check stock (spec US3)
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Create `backend/src/Store.Application/Orders/CustomerOrderService.cs` (+ `OrderListQuery.cs` / validator: page ≥ 1, page size 1–50, default 10; `OrderSummaryResponse.cs`): `ListAsync` (own orders, `AsNoTracking`, `CreatedAt` desc then `Id` desc, item count, paged — research R12), `GetAsync` (own or 404 `orderNotFound`, snapshot fields only), `CancelAsync` per research R6 inside `ConcurrencyRetry` (tracked order + items + variants; not own → 404; not Pending → 409 `orderCannotBeCancelled`; `Order.Cancel` (`DomainException` → `orderCannotBeCancelled`); `Restock` each line; save (the retry helper commits); exhausted → 409 `orderConflict`); logs user id, order id, outcome; register in `AddApplication`; add `GET /api/orders`, `GET /api/orders/{id}`, `POST /api/orders/{id}/cancel` to `OrdersController`
+- [ ] T025 [US3] Create `backend/src/Store.Application/Orders/Services/CustomerOrderService.cs` (+ `Requests/OrderListQuery.cs`, `Validators/OrderListQueryValidator.cs`: page ≥ 1, page size 1–50, default 10; `Responses/OrderSummaryResponse.cs`): `ListAsync` (own orders, `AsNoTracking`, `CreatedAt` desc then `Id` desc, item count, paged — research R12), `GetAsync` (own or 404 `orderNotFound`, snapshot fields only), `CancelAsync` per research R6 inside `ConcurrencyRetry` (tracked order + items + variants; not own → 404; not Pending → 409 `orderCannotBeCancelled`; `Order.Cancel` (`DomainException` → `orderCannotBeCancelled`); `Restock` each line; save (the retry helper commits); exhausted → 409 `orderConflict`); logs user id, order id, outcome; register in `AddApplication`; add `GET /api/orders`, `GET /api/orders/{id}`, `POST /api/orders/{id}/cancel` to `OrdersController`
 
 ### Tests for User Story 3
 
@@ -139,7 +154,7 @@ non-empty carts; merge twice (spec US4)
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Create `backend/src/Store.Application/Cart/CartMergeService.cs`, `MergeCartRequest.cs` + validator (≤ 30 entries, variant id > 0, quantity 1–5), `MergeAdjustmentReason.cs`, `MergeCartResponse.cs` per research R9 (collapse duplicates to the max; skip `variantNotFound` / `outOfStock` / `cartFull`; `quantityReduced` when capped; max-not-sum; one save; unique-index race retried once like T017; returns `CartReader` result + adjustments); register in `AddApplication`; add `POST /api/cart/merge` to `CartController`
+- [ ] T029 [US4] Create in `backend/src/Store.Application/Cart/`: `Services/CartMergeService.cs`, `Requests/MergeCartRequest.cs`, `Validators/MergeCartRequestValidator.cs` (≤ 30 entries, variant id > 0, quantity 1–5), `Responses/MergeAdjustmentReason.cs` (camelCase JSON names, response-only enum), `Responses/MergeCartResponse.cs` per research R9 (collapse duplicates to the max; skip `variantNotFound` / `outOfStock` / `cartFull`; `quantityReduced` when capped; max-not-sum; one save; unique-index race retried once like T017; returns `CartReader` result + adjustments); register in `AddApplication`; add `POST /api/cart/merge` to `CartController`
 
 ### Tests for User Story 4
 
@@ -177,7 +192,8 @@ non-empty carts; merge twice (spec US4)
 
 - **Setup (Phase 1)** → **Foundational (Phase 2)** → user stories → **Polish (Phase 8)**
 - **US1 (Phase 3)** depends on Foundational
-- **US2 (Phase 4)** depends on US1 (carts are built through the cart API)
+- **Layout refactor (Phase 3.5, T035)** after US1, before any later phase adds files
+- **US2 (Phase 4)** depends on US1 (carts are built through the cart API) and T035
 - **US3 (Phase 5)** depends on US2 (`OrderMapping`, `OrdersController`); its seeded-order tests do
   not need checkout
 - **US4 (Phase 6)** depends on US1 (`CartReader`, `CartController`)
