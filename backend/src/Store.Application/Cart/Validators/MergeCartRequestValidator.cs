@@ -15,10 +15,12 @@ public sealed class MergeCartRequestValidator : AbstractValidator<MergeCartReque
             .Must(items => items.Count <= StoreLimits.MaxCartLines)
             .WithMessage($"A guest cart can hold at most {StoreLimits.MaxCartLines} items.");
 
-        RuleForEach(request => request.Items).ChildRules(item =>
-        {
-            item.RuleFor(entry => entry.VariantId).GreaterThan(0);
-            item.RuleFor(entry => entry.Quantity).InclusiveBetween(1, StoreLimits.MaxQuantityPerVariant);
-        });
+        RuleForEach(request => request.Items)
+            .NotNull()
+            .ChildRules(item =>
+            {
+                item.RuleFor(entry => entry.VariantId).GreaterThan(0);
+                item.RuleFor(entry => entry.Quantity).InclusiveBetween(1, StoreLimits.MaxQuantityPerVariant);
+            });
     }
 }

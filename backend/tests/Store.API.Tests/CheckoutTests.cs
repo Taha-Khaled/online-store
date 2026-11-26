@@ -101,6 +101,19 @@ public class CheckoutTests(StoreApiFactory factory) : IClassFixture<StoreApiFact
     }
 
     [Fact]
+    public async Task NullBody_Returns400()
+    {
+        var (client, _) = await factory.NewCustomerAsync();
+
+        var response = await client.PostAsync(
+            "/api/orders",
+            new StringContent("null", System.Text.Encoding.UTF8, "application/json"));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await response.ReadErrorAsync()).Code.ShouldBe("validationFailed");
+    }
+
+    [Fact]
     public async Task ShortValuesAfterTrimming_AreRejected()
     {
         var (client, _) = await factory.NewCustomerAsync();

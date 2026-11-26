@@ -142,6 +142,30 @@ public class CartMergeTests(StoreApiFactory factory) : IClassFixture<StoreApiFac
         (await response.ReadErrorAsync()).Errors.ShouldNotBeNull().ShouldContainKey("items");
     }
 
+    [Fact]
+    public async Task NullEntry_Returns400()
+    {
+        var (client, _) = await factory.NewCustomerAsync();
+
+        var response = await client.PostAsJsonAsync("/api/cart/merge", new { items = new object?[] { null } });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await response.ReadErrorAsync()).Errors.ShouldNotBeNull().ShouldContainKey("items[0]");
+    }
+
+    [Fact]
+    public async Task NullBody_Returns400()
+    {
+        var (client, _) = await factory.NewCustomerAsync();
+
+        var response = await client.PostAsync(
+            "/api/cart/merge",
+            new StringContent("null", System.Text.Encoding.UTF8, "application/json"));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await response.ReadErrorAsync()).Code.ShouldBe("validationFailed");
+    }
+
     private static Task<MergeBody> ReadMergeAsync(HttpResponseMessage response)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
