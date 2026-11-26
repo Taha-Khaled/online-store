@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Store.Application.Auth;
+using Store.Application.Cart;
 using Store.Application.Categories;
 using Store.Application.Products;
 
@@ -15,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<ProductService>();
         services.AddScoped<AuthService>();
         services.AddScoped<SessionService>();
+        services.AddScoped<CartReader>();
 
         return services;
     }
