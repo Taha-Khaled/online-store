@@ -103,6 +103,34 @@ public class SchemaTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Migrate_AddsOrderRowVersionConcurrencyToken()
+    {
+        await using var context = _db.CreateContext();
+
+        var columns = await context.Database
+            .SqlQuery<ColumnInfo>($"""
+                SELECT COLUMN_NAME AS Name, DATA_TYPE AS Type, CHARACTER_MAXIMUM_LENGTH AS MaxLength,
+                       CAST(CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END AS bit) AS IsNullable
+                FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'RowVersion'
+                """)
+            .ToListAsync();
+
+        columns.ShouldBe([new ColumnInfo("RowVersion", "timestamp", null, false)]);
+    }
+
+    [Fact]
+    public async Task Migrate_CreatesOrderNumberSequenceStartingAt1001()
+    {
+        await using var context = _db.CreateContext();
+
+        var startValues = await context.Database
+            .SqlQuery<long>($"SELECT CAST(start_value AS bigint) AS [Value] FROM sys.sequences WHERE name = 'OrderNumberSequence'")
+            .ToListAsync();
+
+        startValues.ShouldBe([1001L]);
+    }
+
+    [Fact]
     public async Task Migrate_RefreshTokensCascadeFromUsers()
     {
         await using var context = _db.CreateContext();

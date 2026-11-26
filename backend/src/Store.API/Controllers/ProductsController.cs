@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Store.Application.Common;
-using Store.Application.Products;
+using Store.Application.Products.Requests;
+using Store.Application.Products.Responses;
+using Store.Application.Products.Services;
 
 namespace Store.API.Controllers;
 

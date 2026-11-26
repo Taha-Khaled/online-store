@@ -48,6 +48,20 @@ public sealed class ErrorTestController : ControllerBase
     [HttpGet("conflict")]
     public IActionResult ThrowConflict() => throw new ConflictException(ErrorCodes.EmailAlreadyExists, "Email already exists.");
 
+    [HttpGet("bad-request")]
+    public IActionResult ThrowBadRequest() => throw new BadRequestException(ErrorCodes.CartEmpty, "Your cart is empty.");
+
+    [HttpGet("conflict-with-details")]
+    public IActionResult ThrowConflictWithDetails() =>
+        throw new ConflictException(
+            ErrorCodes.CartChanged,
+            "Some items in your cart changed.",
+            new { items = new[] { new { itemId = 41, variantId = 12, status = "quantityReduced", maxQuantity = 1 } } });
+
+    [HttpGet("customer-only")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Policy = Store.API.Authorization.Policies.CustomerOnly)]
+    public IActionResult CustomerOnly() => Ok();
+
     [HttpGet("unexpected")]
     public IActionResult Unexpected() => throw new InvalidOperationException(SecretDetail);
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Store.Domain.Entities;
 
@@ -19,6 +20,9 @@ public interface IAppDbContext
     DbSet<RefreshToken> RefreshTokens { get; }
 
     DatabaseFacade Database { get; }
+
+    /// <summary>Lets retrying services start each attempt with a clean state (003 research R5).</summary>
+    ChangeTracker ChangeTracker { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

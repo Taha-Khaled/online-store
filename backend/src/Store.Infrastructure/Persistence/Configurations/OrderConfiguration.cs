@@ -21,6 +21,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.City).HasMaxLength(100);
         builder.Property(o => o.AddressLine).HasMaxLength(300);
         builder.Property(o => o.Notes).HasMaxLength(500);
+        builder.Property(o => o.RowVersion).IsRowVersion();
 
         builder.HasIndex(o => o.OrderNumber).IsUnique();
         builder.HasIndex(o => o.UserId);

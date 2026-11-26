@@ -22,6 +22,9 @@ namespace Store.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.HasSequence("OrderNumberSequence")
+                .StartsAt(1001L);
+
             modelBuilder.Entity("Store.Domain.Entities.CartItem", b =>
                 {
                     b.Property<int>("Id")
@@ -191,6 +194,12 @@ namespace Store.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<decimal>("ShippingFee")
                         .HasPrecision(18, 2)

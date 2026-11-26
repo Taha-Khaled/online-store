@@ -52,12 +52,18 @@ public class ConstraintTests : IAsyncLifetime
     {
         var adminId = await UserIdAsync("admin@store.local");
         var variantId = await VariantIdAsync(NeverOrderedProduct, "Black", "42");
+        await using (var setup = _db.CreateContext())
+        {
+            setup.CartItems.Add(new CartItem(adminId, variantId, 1, DateTime.UtcNow));
+            await setup.SaveChangesAsync();
+        }
 
+        // The domain rejects 0 and 6 first (003 T006); write directly to prove the database safety net.
         await ShouldMatchAsync(accepted, async () =>
         {
             await using var context = _db.CreateContext();
-            context.CartItems.Add(new CartItem(adminId, variantId, quantity, DateTime.UtcNow));
-            await context.SaveChangesAsync();
+            await context.CartItems.Where(c => c.UserId == adminId && c.ProductVariantId == variantId)
+                .ExecuteUpdateAsync(s => s.SetProperty(c => c.Quantity, quantity));
         });
     }
 
