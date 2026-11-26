@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<AuthService>();
         services.AddScoped<SessionService>();
         services.AddScoped<CartReader>();
+        services.AddScoped<CartService>();
 
         return services;
     }
