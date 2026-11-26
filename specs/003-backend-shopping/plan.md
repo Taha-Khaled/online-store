@@ -38,7 +38,7 @@ plus one save per attempt
 **Constraints**: never oversell (rowversion + transaction + retry); no raw SQL except the
 interpolated `SqlQuery` for the sequence; exact stock never returned; customer-only
 
-**Scale/Scope**: 9 endpoints; 4 domain entities changed; 1 sequence; 1 new column
+**Scale/Scope**: 10 endpoints (6 cart, 4 orders); 4 domain entities changed; 1 sequence; 1 new column
 
 ## Constitution Check
 

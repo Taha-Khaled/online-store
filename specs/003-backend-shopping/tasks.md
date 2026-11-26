@@ -168,11 +168,11 @@ non-empty carts; merge twice (spec US4)
 
 **Goal**: every shopping endpoint rejects anonymous callers and admins
 
-**Independent Test**: call all 9 endpoints without a token and with the admin token (spec US5)
+**Independent Test**: call all 10 endpoints without a token and with the admin token (spec US5)
 
 ### Tests for User Story 5
 
-- [ ] T031 [US5] Write `backend/tests/Store.API.Tests/ShoppingAccessTests.cs`: AC 1 — theory over all 9 endpoints (method + path + body): no token → 401 `unauthorized`; admin token → 403 `forbidden` with the error shape; customer token is not 401/403 (implementation already delivered by T015, T018, T022, T025, T029)
+- [ ] T031 [US5] Write `backend/tests/Store.API.Tests/ShoppingAccessTests.cs`: AC 1 — theory over all 10 endpoints (method + path + body): no token → 401 `unauthorized`; admin token → 403 `forbidden` with the error shape; customer token is not 401/403 (implementation already delivered by T015, T018, T022, T025, T029)
 
 **Checkpoint**: all user stories pass independently
 
