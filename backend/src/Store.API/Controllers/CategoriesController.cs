@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Store.Application.Categories;
+using Store.Application.Categories.Responses;
+using Store.Application.Categories.Services;
 
 namespace Store.API.Controllers;
 

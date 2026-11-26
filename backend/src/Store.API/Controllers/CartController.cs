@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Store.API.Authorization;
-using Store.Application.Cart;
+using Store.Application.Cart.Requests;
+using Store.Application.Cart.Responses;
+using Store.Application.Cart.Services;
 
 namespace Store.API.Controllers;
 

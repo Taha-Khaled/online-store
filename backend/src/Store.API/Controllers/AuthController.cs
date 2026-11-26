@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Store.API.Authorization;
-using Store.Application.Auth;
+using Store.Application.Auth.Requests;
+using Store.Application.Auth.Responses;
+using Store.Application.Auth.Services;
 
 namespace Store.API.Controllers;
 

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Store.Application.Products;
+using Store.Application.Products.Requests;
 
 namespace Store.API.Binding;
 

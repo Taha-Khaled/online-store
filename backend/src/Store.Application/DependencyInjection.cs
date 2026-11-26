@@ -1,9 +1,9 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using Store.Application.Auth;
-using Store.Application.Cart;
-using Store.Application.Categories;
-using Store.Application.Products;
+using Store.Application.Auth.Services;
+using Store.Application.Cart.Services;
+using Store.Application.Categories.Services;
+using Store.Application.Products.Services;
 
 namespace Store.Application;
 

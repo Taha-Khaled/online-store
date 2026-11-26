@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
-using Store.Application.Products;
+using Store.Application.Products.Requests;
+using Store.Application.Products.Services;
 using Store.Infrastructure.Persistence;
 
 namespace Store.Infrastructure.Tests.Catalog;
