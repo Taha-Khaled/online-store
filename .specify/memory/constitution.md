@@ -44,6 +44,13 @@ Removed sections:
     Reason: 003-backend-shopping spec (FR-016, FR-018); `cartChanged` with the affected items lets
     the customer fix the cart.
 
+1.7.3 → 1.7.4 (PATCH):
+  - Core Principles → I. Clean Architecture: inside each Application feature folder, files go in
+    `Requests/`, `Responses/`, `Validators/` and `Services/`, with namespaces following the
+    folders; every new file in every future feature follows this layout. Reason: developer
+    decision during 003-backend-shopping (task T035 moved the existing Auth, Categories, Products
+    and Cart files).
+
 Follow-up TODOs:
   - None.
 
@@ -74,7 +81,9 @@ must log in to check out.
 - Keep it simple: no MediatR, no CQRS, no domain events, no message broker. Services call
   each other directly within a transaction.
 - Application is organized by feature (Auth, Products, Categories, Cart, Orders, Dashboard),
-  each with its DTOs, service, and validators.
+  each with its DTOs, service, and validators. Inside each feature folder, files go in
+  `Requests/`, `Responses/`, `Validators/` and `Services/`, and namespaces follow the folders.
+  Every new file in every future feature follows this layout.
 
 **Rationale**: a small, layered structure keeps rules testable in isolation and keeps the
 proof of concept easy to review.
@@ -270,4 +279,4 @@ this section applies.
   Security and Data Access principles checked explicitly (see Quality Gates). Plans produced by
   `/speckit-plan` must pass a Constitution Check against this document.
 
-**Version**: 1.7.3 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-25
+**Version**: 1.7.4 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-26
