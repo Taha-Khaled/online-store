@@ -77,6 +77,26 @@ public class CartRaceTests : IAsyncLifetime
         (await check.CartItems.AnyAsync(line => line.UserId == _userId)).ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task Merge_WhenAnotherRequestInsertedTheLineFirst_RerunsAndKeepsOneLineAtTheMax()
+    {
+        await using var context = CreateContext(new InsertSameLineFirst(_db, _userId, _variantId));
+        var service = new CartMergeService(
+            context,
+            new CartReader(context, Options.Create(new ShopOptions())),
+            new MergeCartRequestValidator(),
+            _time,
+            NullLogger<CartMergeService>.Instance);
+
+        var merged = await service.MergeAsync(_userId, new MergeCartRequest([new MergeCartItem(_variantId, 2)]));
+
+        // The other request's line (×1) won the insert; the rerun raised it to the guest's 2 (max, not sum).
+        merged.Cart.Items.ShouldHaveSingleItem().Quantity.ShouldBe(2);
+        merged.Adjustments.ShouldBeEmpty();
+        await using var check = _db.CreateContext();
+        (await check.CartItems.SingleAsync(line => line.UserId == _userId)).Quantity.ShouldBe(2);
+    }
+
     private AppDbContext CreateContext(IInterceptor interceptor) =>
         new(new DbContextOptionsBuilder<AppDbContext>()
             .UseSqlServer(_db.ConnectionString)

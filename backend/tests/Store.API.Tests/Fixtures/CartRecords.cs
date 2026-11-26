@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace Store.API.Tests.Fixtures;
@@ -25,6 +26,10 @@ public sealed record CartBody(
     decimal Total,
     bool CanCheckout);
 
+public sealed record MergeAdjustment(int VariantId, string Reason, int RequestedQuantity, int Quantity);
+
+public sealed record MergeBody(CartBody Cart, List<MergeAdjustment> Adjustments);
+
 public static class CartRecords
 {
     /// <summary>Seeded SKUs used by the shopping tests (001 seed data).</summary>
@@ -42,6 +47,12 @@ public static class CartRecords
         response.EnsureSuccessStatusCode();
         return await response.ReadCartAsync();
     }
+
+    /// <summary>Posts a guest cart (<c>(variantId, quantity)</c> pairs) to the merge endpoint.</summary>
+    public static Task<HttpResponseMessage> MergeAsync(this HttpClient client, params (int VariantId, int Quantity)[] items) =>
+        client.PostAsJsonAsync(
+            "/api/cart/merge",
+            new { items = items.Select(item => new { variantId = item.VariantId, quantity = item.Quantity }) });
 
     /// <summary>The <c>details</c> object of an error response.</summary>
     public static async Task<JsonElement> ReadErrorDetailsAsync(this HttpResponseMessage response)
