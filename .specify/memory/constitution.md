@@ -56,6 +56,8 @@ Removed sections:
     `feat #F004-T005 add variant endpoints`); commits outside the task list use `#F<feature>`
     (e.g. `docs #F004 ...`). Reason: GitHub reads `fix #004` as "fixes #4" and closes that issue
     (commit `fix #003-T034 ...` closed issue #3). Earlier commits stay as they are.
+  - Project Workflow → Work items: "there are no external issues" replaced by: each feature is
+    tracked by one GitHub issue, and the feature's PR description includes `Closes #<issue>`.
 
 Follow-up TODOs:
   - None.
@@ -244,7 +246,8 @@ shadcn/ui
 These rules adapt the developer's global agent rules to this project. Where they conflict,
 this section applies.
 
-- **Work items**: there are no external issues. The work item number is the Spec Kit task ID
+- **Work items**: each feature is tracked by one GitHub issue, and the feature's PR description
+  includes `Closes #<issue>`. The work item number is the Spec Kit task ID
   from the feature's `tasks.md`, written with `F` and its feature number: `#F<feature>-<task>`
   (e.g. `feat #F004-T005 add variant endpoints`). Commits that belong to a feature but to no
   task in its list use `#F<feature>` (e.g. `docs #F004 ...`). The `F` stops GitHub from reading
