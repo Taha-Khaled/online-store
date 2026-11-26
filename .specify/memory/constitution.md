@@ -51,6 +51,12 @@ Removed sections:
     decision during 003-backend-shopping (task T035 moved the existing Auth, Categories, Products
     and Cart files).
 
+1.7.4 → 1.7.5 (PATCH):
+  - Project Workflow → Work items: work items are written `#F<feature>-<task>` (e.g.
+    `feat #F004-T005 add variant endpoints`); commits outside the task list use `#F<feature>`
+    (e.g. `docs #F004 ...`). Reason: GitHub reads `fix #004` as "fixes #4" and closes that issue
+    (commit `fix #003-T034 ...` closed issue #3). Earlier commits stay as they are.
+
 Follow-up TODOs:
   - None.
 
@@ -239,9 +245,12 @@ These rules adapt the developer's global agent rules to this project. Where they
 this section applies.
 
 - **Work items**: there are no external issues. The work item number is the Spec Kit task ID
-  from the feature's `tasks.md`, written with its feature number: `#<feature>-<task>`
-  (e.g. `feat #001-T005 add product variant entity`). Branches use the feature number
-  (e.g. `feat/001-database`). If a change has no matching task, stop and ask.
+  from the feature's `tasks.md`, written with `F` and its feature number: `#F<feature>-<task>`
+  (e.g. `feat #F004-T005 add variant endpoints`). Commits that belong to a feature but to no
+  task in its list use `#F<feature>` (e.g. `docs #F004 ...`). The `F` stops GitHub from reading
+  `fix #004` as "fixes #4" and closing that issue; earlier commits keep their old format.
+  Branches use the feature number (e.g. `feat/001-database`). If a change has no matching task,
+  stop and ask.
 - **Coverage**: changed code must reach 80% line and branch coverage. Excluded from coverage:
   EF Core migrations, entity configurations, seed data, `Program.cs` and DI registration, and
   DTOs without logic.
@@ -279,4 +288,4 @@ this section applies.
   Security and Data Access principles checked explicitly (see Quality Gates). Plans produced by
   `/speckit-plan` must pass a Constitution Check against this document.
 
-**Version**: 1.7.4 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-26
+**Version**: 1.7.5 | **Ratified**: 2026-11-24 | **Last Amended**: 2026-11-26
