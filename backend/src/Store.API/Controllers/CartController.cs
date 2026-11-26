@@ -11,7 +11,7 @@ namespace Store.API.Controllers;
 [ApiController]
 [Route("api/cart")]
 [Authorize(Policy = Policies.CustomerOnly)]
-public sealed class CartController(CartReader reader, CartService cart) : ControllerBase
+public sealed class CartController(CartReader reader, CartService cart, CartMergeService merge) : ControllerBase
 {
     [HttpGet]
     public Task<CartResponse> Get(CancellationToken cancellationToken) =>
@@ -28,6 +28,10 @@ public sealed class CartController(CartReader reader, CartService cart) : Contro
     [HttpDelete("items/{itemId:int}")]
     public Task<CartResponse> RemoveItem(int itemId, CancellationToken cancellationToken) =>
         cart.RemoveItemAsync(User.GetUserId(), itemId, cancellationToken);
+
+    [HttpPost("merge")]
+    public Task<MergeCartResponse> Merge([FromBody] MergeCartRequest request, CancellationToken cancellationToken) =>
+        merge.MergeAsync(User.GetUserId(), request, cancellationToken);
 
     [HttpDelete]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

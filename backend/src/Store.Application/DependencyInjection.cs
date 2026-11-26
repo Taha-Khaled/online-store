@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<SessionService>();
         services.AddScoped<CartReader>();
         services.AddScoped<CartService>();
+        services.AddScoped<CartMergeService>();
         services.AddScoped<CheckoutService>();
         services.AddScoped<CustomerOrderService>();
 
