@@ -89,6 +89,18 @@ public class CheckoutTests(StoreApiFactory factory) : IClassFixture<StoreApiFact
     }
 
     [Fact]
+    public async Task EmptyBody_ReturnsAllRequiredFieldErrors()
+    {
+        var (client, _) = await factory.NewCustomerAsync();
+
+        var response = await client.CheckoutAsync(new { });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await response.ReadErrorAsync()).Errors.ShouldNotBeNull().Keys
+            .ShouldBe(["shippingName", "shippingPhone", "city", "addressLine"], ignoreOrder: true);
+    }
+
+    [Fact]
     public async Task ShortValuesAfterTrimming_AreRejected()
     {
         var (client, _) = await factory.NewCustomerAsync();
